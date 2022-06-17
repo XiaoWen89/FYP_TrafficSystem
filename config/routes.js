@@ -1,5 +1,4 @@
 export default [
-
   {
     path: '/user',
     layout: false,
@@ -31,6 +30,12 @@ export default [
         name: 'Monitoring',
         icon: '',
         component: './Admin',
+      },
+      {
+        path: '/dashboard/prediction',
+        name: 'Prediction',
+        icon: '',
+        component: './Prediction',
       },
       {
         component: './404',

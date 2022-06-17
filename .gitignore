@@ -38,3 +38,7 @@ screenshot
 .eslintcache
 
 build
+
+#flask api part
+/api/__pycache__/*
+/api/venv/*

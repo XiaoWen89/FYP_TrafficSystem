@@ -11,6 +11,7 @@ export default {
   'menu.dashboard.analysis': 'Analysis',
   'menu.dashboard.monitor': 'Monitor',
   'menu.dashboard.Monitoring': 'Monitoring',
+  'menu.dashboard.Prediction': 'Prediction',
   'menu.dashboard.workplace': 'Workplace',
   'menu.exception.403': '403',
   'menu.exception.404': '404',

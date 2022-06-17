@@ -33,11 +33,30 @@ export async function login(body, options) {
 
 /** POST  /api_/getIncidentData **/
 
-export async function getAccidentData(body, options){
-    return request('/apis/getAccidentData', {
-        method: 'GET',
-        data: body,
-        ...(options || {})
-    })
+export async function getAccidentData(body, options) {
+  return request('/apis/getAccidentData', {
+    method: 'GET',
+    data: body,
+    ...(options || {}),
+  });
 }
 
+/** POST  /api_/incidentShow **/
+
+export async function incidentShow(body, options) {
+  return request('/apis/incidentShow', {
+    method: 'GET',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** POST  /api_/incidentShow **/
+
+export async function prediction_(body, options) {
+  return request('/apis/prediction', {
+    method: 'GET',
+    data: body,
+    ...(options || {}),
+  });
+}
