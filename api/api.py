@@ -3,8 +3,11 @@ import requests
 import os
 import json
 from flask import Flask
+from flask import request
 from dotenv import load_dotenv
 from preWeather import getWeatherfromAPI,predictionforAcc,loadModel,timesplit
+
+import utils
 
 
 load_dotenv()
@@ -17,7 +20,7 @@ def get_current_time():
         'data': "this is test ~"
         }
 
-#get all accident data
+#get all accident data, the data here retuen includes accidents and incidents
 @app.route('/apis/getAccidentData')
 def getIncidentData():
     
@@ -104,7 +107,67 @@ def timeCountinc():
                 incHourDir[hour]=incHourDir[hour]+1
     return incHourDir
 
+@app.route("/apis/get2HourWeatherPred", methods=["GET", "POST"])
+def get2HourWeatherPred():
+    data_api = os.environ.get('WEATHER_FORECAST_2H_API')
+    request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
 
+    data = None
+    try:
+        response=requests.get(data_api, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processWeatherData(reponse_data)
+
+    return data
+
+@app.route('/apis/getAirTemp', methods=['POST'])
+def getAirTemp():
+    data_api = os.environ.get('AIR_TEMP_API')
+
+    request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
+
+    data = None
+    try:
+        response=requests.get(data_api, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processTempData(reponse_data)
+
+    return data
+
+@app.route('/apis/getWindSpeed', methods=['POST'])
+def getWindSpeed():
+    data_api = os.environ.get('WIND_SPEED_API')
+
+    request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
+
+    data= None
+    try:
+        response=requests.get(data_api, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processWindData(reponse_data)
+
+    return data
 
 if __name__ == '__main__':
     app.run(debug=True)

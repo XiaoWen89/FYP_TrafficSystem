@@ -1,6 +1,7 @@
 import React from 'react'
 
 const Marker = ({text}) => {
+    console.log(text)
     return(
         <div style={{
             color: 'white',

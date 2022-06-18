@@ -1,29 +1,24 @@
 import React, { useEffect,useState } from 'react'
 import { HeartTwoTone, SmileTwoTone } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-components';
-import { Alert, Card, Typography } from 'antd';
+import { Alert, Card, Typography, Row, Col } from 'antd';
 import { useIntl } from 'umi';
 import Map from '../components/Map/Map';
 import PieChart from '../components/PieChart/PieChart'
-import { getAccidentData } from '../services/ant-design-pro/api';
+import BarChart from '../components/BarChart/BarChart'
+import { getAccidentData, get2HourWeatherPred} from '../services/ant-design-pro/api';
 
 const Admin = () => {
   const intl = useIntl();
 
   const [accidentData, setAccidentData] = useState([])
   const [accidentCountData, setAccidentCountData] = useState([])
+  const [weatherForecastData, setWeatherForecastData] = useState([])
 
   useEffect(async () => {
-    //let raw_data = await getAccidentData();
     fetchAccidentData();
-    //let accident_data = raw_data.value;
-    //console.log(accident_data)
-    //setAccidentData(accident_data)
-    //let accident_count = processAccidentData(accident_data);
-    //console.log(accident_count)
-    //setAccidentCountData(accident_count)
   }, [])
-
+  /*
   useEffect(() => {
       console.log(accidentData)
   }, [accidentData])
@@ -31,6 +26,14 @@ const Admin = () => {
   useEffect(() => {
       console.log(accidentCountData)
   }, [accidentCountData])
+  */
+  useEffect(() => {
+      console.log(weatherForecastData)
+  }, [weatherForecastData])
+  
+  useEffect(async () => {
+    get2HourWeatherPredData()
+  }, [])
 
   const fetchAccidentData = async()=>{
     let raw_data = await getAccidentData();
@@ -40,6 +43,18 @@ const Admin = () => {
 
     let processed_data = processAccidentData(accident_data)
     setAccidentCountData(processed_data)
+  }
+
+  const get2HourWeatherPredData = async()=>{
+    let current_datetime = prepareDatetime()
+
+    let response = await get2HourWeatherPred(current_datetime);
+    console.log(response)
+    let twoHourWeatherData;
+    if (response.data){
+      twoHourWeatherData = response.data
+      setWeatherForecastData(twoHourWeatherData)
+    }
   }
 
   function processAccidentData(accident_data){
@@ -62,6 +77,14 @@ const Admin = () => {
     }
 
     return processed_data_
+  }
+
+  function prepareDatetime(){
+    let current_datetime = new Date().toISOString();
+    let dot_loc = current_datetime.indexOf('.');
+    let final_datetime = current_datetime.substring(0,dot_loc)
+
+    return final_datetime
   }
 
   return (
@@ -94,7 +117,7 @@ const Admin = () => {
         >
           <SmileTwoTone /> Ant Design Pro <HeartTwoTone twoToneColor="#eb2f96" /> You
         </Typography.Title>
-      </Card> */}
+      </Card> 
       <p
         style={{
           textAlign: 'center',
@@ -107,12 +130,16 @@ const Admin = () => {
         </a>
         。
       </p>
+      */}
       <Card 
       title="Real Time Traffic Accident Monitoring"
       >
-        <PieChart accidentCountData = {accidentCountData}/>
+        <Row>
+          <Col span={12}><PieChart accidentCountData = {accidentCountData}/></Col>
+          <Col span={12}><BarChart accidentCountData = {accidentCountData}/></Col>
+        </Row>
       </Card>
-      <Map accidentData={accidentData}/>
+      <Map accidentData={accidentData} weatherForecastData={weatherForecastData}/>
     </PageHeaderWrapper>
   );
 };

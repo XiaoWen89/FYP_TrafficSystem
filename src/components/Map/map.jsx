@@ -3,6 +3,8 @@ import GoogleMapReact from 'google-map-react';
 import axios from 'axios'
 
 import Marker from '../Marker/Marker'
+import WeatherIcon from '../WeatherIcon/WeatherIcon'
+import { convertCompilerOptionsFromJson } from 'typescript';
 
 const mapStyles = {
   height: '70vh', 
@@ -11,10 +13,17 @@ const mapStyles = {
 
 const Map = (props) => {
   const [accidentData, setAccidentData] = useState([])
+  const [weatherForecastData, setWeatherForecastData] = useState([])
 
   useEffect(() => {
     setAccidentData(props.accidentData)
   }, [props.accidentData])
+
+  useEffect(() => {
+    setWeatherForecastData(props.weatherForecastData)
+  }, [props.weatherForecastData])
+
+  console.log(weatherForecastData)
   /*
   useEffect(() =>{
     //setIncidentData({loading:true});
@@ -42,13 +51,21 @@ const Map = (props) => {
         }}
         defaultZoom={12.5}
         layerTypes={['TrafficLayer']}
-      >
+      > 
         {accidentData && accidentData.length ? accidentData.map((accident, index) => (
           <Marker
             key={index}
             lat={accident.Latitude}
             lng={accident.Longitude}
             text={accident.Type}
+          />
+        )) : null}
+        {weatherForecastData && weatherForecastData.length ? weatherForecastData.map((weather, index) => (
+          <WeatherIcon
+           key={index}
+           lat={weather.location.latitude}
+           lng={weather.location.longitude}
+           forecast={weather.forecast}
           />
         )) : null}
       </GoogleMapReact>

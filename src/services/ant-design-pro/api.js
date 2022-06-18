@@ -41,7 +41,7 @@ export async function getAccidentData(body, options) {
   });
 }
 
-/** POST  /api_/incidentShow **/
+/** POST  /apis/incidentShow **/
 
 export async function incidentShow(body, options) {
   return request('/apis/incidentShow', {
@@ -51,7 +51,7 @@ export async function incidentShow(body, options) {
   });
 }
 
-/** POST  /api_/incidentShow **/
+/** POST  /apis/incidentShow **/
 
 export async function prediction_(body, options) {
   return request('/apis/prediction', {
@@ -59,4 +59,35 @@ export async function prediction_(body, options) {
     data: body,
     ...(options || {}),
   });
+}
+
+/** POST  /apis/get2HourWeatherPred **/
+
+export async function get2HourWeatherPred(body, options) {
+  return request('/apis/get2HourWeatherPred', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
+
+
+/** POST  /apis/getAirTemp */
+
+export async function getAirTemp(body, options) {
+  return request('/apis/getAirTemp', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
+
+/** POST /apis/getWindSpeed */
+
+export async function getWindSpeed(body, options) {
+  return request('/apis/getWindSpeed', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
 }
