@@ -2,6 +2,7 @@ from distutils.log import info
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import datetime
 import matplotlib.pyplot as plt
 from seaborn import displot
 
@@ -17,6 +18,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 
 from joblib import dump, load
+
 
 
 def preprocess():
@@ -397,25 +399,59 @@ def saveModel(modle,modelname):
     return None
 
 def loadModel():
-    modelSe = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\modelSe.joblib')
-    modelDur = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\modelDur.joblib')
-    modelDur = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\modelDis.joblib')
+    modelSe = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\modelSe.joblib')
+    modelDur = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\modelDur.joblib')
+    modelDur = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\modelDis.joblib')
     return modelSe,modelDur,modelDur
 #pending weather API
 def getWeatherfromAPI():
-    accident=pd.DataFrame({'Humidity(%)':[70.0], 'Pressure(in)':[100],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[18], 'Temperature(C)':[0], 'Wind_Chill(C)':[0], 'Visibility(km)':[19], 'Wind_Speed(m/s)':[33.3], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[0], 'Wind_E':[1],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
-    return accident
+    weather=pd.DataFrame({'Humidity(%)':[0.0], 'Pressure(in)':[100],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[18], 'Temperature(C)':[20], 'Wind_Chill(C)':[0], 'Visibility(km)':[19], 'Wind_Speed(m/s)':[33.3], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[0], 'Wind_E':[1],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
+    return weather
 
-def predictionforAcc(modelSe, modelDur,modelDis,accident):
+def timesplit(accident):
     
-    resultSe=modelSe.predict(accident)[0]
-    resultDur=modelDur.predict(accident)[0]
-    resultDis=modelDis.predict(accident)[0]
+    date = datetime.date.today()
+    year = date.strftime("%Y") 
+    timeInfo=str(year)+accident["Message"].split(" ")[0]
+    
+    
+    format = "%Y(%d/%m)%H:%M"
+    dt_object = datetime.datetime.strptime(timeInfo, format)
+       
+    return dt_object
+
+def endTime(dt_object,resultDur):
+    if resultDur==0:
+        estEarly=dt_object
+        estLate=dt_object+datetime.timedelta(minutes=30)
+    elif resultDur==1:
+        estEarly=dt_object+datetime.timedelta(minutes=30)
+        estLate=dt_object+datetime.timedelta(minutes=60)
+    elif resultDur==2:
+        estEarly=dt_object+datetime.timedelta(minutes=60)
+        estLate=dt_object+datetime.timedelta(minutes=180)
+    elif resultDur==3:
+        estEarly=dt_object+datetime.timedelta(minutes=180)
+        estLate=dt_object+datetime.timedelta(minutes=360)
+    elif resultDur==4:
+        estEarly=dt_object+datetime.timedelta(minutes=360)
+        estLate=dt_object+datetime.timedelta(minutes=720)
+    
+    return estEarly, estLate   
+
+def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
+    
+    resultSe=modelSe.predict(weather)[0]
+    resultDur=modelDur.predict(weather)[0]
+    resultDis=modelDis.predict(weather)[0]
+    
+    accTimeInfo=timesplit(accident)
+    estEarly, estLate=endTime(accTimeInfo,resultDur)
 
     Durationbin=["0-30 min","30-60 min", "1-3 hour","3-6 hour","more than 6 hour"]
     Distancebin=["0-500m","500-1000m","1k-2km","more than 2km"]
     
-    result= "The Severity level of the accident is "+str(resultSe)+ " the accident will last for "+str(Durationbin[resultDur])+ " and will effect area will be "+ str(Distancebin[resultDis])
+    result= "The Severity level of the accident is "+str(resultSe)+ " the accident will last for "+str(Durationbin[resultDur])+ " and will effect area will be "+ str(Distancebin[resultDis])+". The estimate end time will be "+str(estEarly)+" to "+str(estLate) +"."
     return result
 
 #1)preprocess
@@ -454,11 +490,23 @@ def predictionforAcc(modelSe, modelDur,modelDis,accident):
 #saveModel(modelDis,"modelDis.joblib")
 
 #7)load Model
-##modelSe, modelDur,modelDis=loadModel()
+#modelSe, modelDur,modelDis=loadModel()
 
-#6)get weather from API(Pending API)
-#accident=pd.DataFrame({'Humidity(%)':[100.0], 'Pressure(in)':[30.06],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[14], 'Temperature(C)':[24], 'Wind_Chill(C)':[24], 'Visibility(km)':[16], 'Wind_Speed(m/s)':[5.56], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[1], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
+#8)get weather from API(Pending API)
+#weather=pd.DataFrame({'Humidity(%)':[100.0], 'Pressure(in)':[30.06],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[14], 'Temperature(C)':[24], 'Wind_Chill(C)':[24], 'Visibility(km)':[16], 'Wind_Speed(m/s)':[5.56], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[1], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
 
-#6)prediction
-#result=predictionforAcc(modelSe, modelDur,modelDis,accident)
+#10)get Accident time information
+'''
+accident= {
+            "Type": "Roadwork",
+            "Latitude": 1.3016764960424563,
+            "Longitude": 103.86281863886131,
+            "Message": "(17/6)13:59 Roadworks on Java Road (towards Nicoll Highway) after Beach Road. Avoid left lane."
+        }
+'''
+#timesplit(accident)
+#print(result)
+
+#11)prediction
+#result=predictionforAcc(modelSe, modelDur,modelDis,weather,accident)
 #print(result)
