@@ -4,7 +4,7 @@ import os
 import json
 from flask import Flask
 from dotenv import load_dotenv
-from preWeather import getWeatherfromAPI,predictionforAcc,loadModel
+from preWeather import getWeatherfromAPI,predictionforAcc,loadModel,timesplit
 
 
 load_dotenv()
@@ -36,7 +36,7 @@ def getIncidentData():
         data = response.json()
     return data
 
-#get incident data only
+#get acccident data only
 @app.route('/apis/incidentShow')
 def incidentShow():
     
@@ -48,23 +48,62 @@ def incidentShow():
         i=i-1
     return data 
 
-@app.route('/apis/roadWork')
-def roadWork():
-    
+@app.route('/apis/roadWorkAdv')
+def roadWorkAdv():
     data = getIncidentData()
     i = len(data["value"])-1
     while i>=0:
-        if data["value"][i]["Type"] != 'RoadWork':
+        if data["value"][i]["Type"] != 'Roadwork':
             del data["value"][i]
-        i=i-1
-    return data 
+        i=i-1   
+    leftlane=[]
+    rightlane=[]
+    for j in data["value"]:
+        
+        advice=j["Message"].split(". ")
+        
+        if len(advice)==2:     
+            if advice[1] == "Avoid left lane.":
+                leftlane.append(j)
+            elif advice[1] == "Avoid right lane.":
+                rightlane.append(j)         
+    return  {"left":leftlane,"right":rightlane}
 
 @app.route('/apis/prediction')
 def prediction():
-    modelSe, modelDur,modelDis=loadModel()
-    accident=getWeatherfromAPI()
-    result=predictionforAcc(modelSe, modelDur,modelDis,accident)  
-    return {"Result":result}
+    accidentlist=incidentShow()["value"]
+    resultList=[]
+    for accident in accidentlist:
+        modelSe, modelDur,modelDis=loadModel()
+        weather=getWeatherfromAPI()
+        result=predictionforAcc(modelSe, modelDur,modelDis,weather,accident) 
+        resultList.append(result)
+    return {"Result":resultList}
+
+@app.route('/apis/timeCount')
+def timeCountAcc():
+    accidentlist=incidentShow()["value"]
+    accHourDir={"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,
+             "16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
+    for accident in accidentlist:
+        hour=str(timesplit(accident).strftime("%H"))
+        for i in accHourDir.keys():
+            if hour==i:
+                accHourDir[hour]=accHourDir[hour]+1
+    return accHourDir
+          
+@app.route('/apis/timeCount')
+def timeCountinc():
+    iccidentlist=getIncidentData()["value"]   
+    incHourDir={"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,
+             "16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
+    for incident in iccidentlist:
+        hour=str(timesplit(incident).strftime("%H"))
+        for i in incHourDir.keys():
+            if hour==i:
+                incHourDir[hour]=incHourDir[hour]+1
+    return incHourDir
+
 
 
 if __name__ == '__main__':
