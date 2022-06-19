@@ -61,6 +61,16 @@ export async function prediction_(body, options) {
   });
 }
 
+/** POST  /apis/roadWork **/
+
+export async function roadWorkAdv(body, options) {
+  return request('/apis/roadWorkAdv', {
+    method: 'GET',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** POST  /apis/get2HourWeatherPred **/
 
 export async function get2HourWeatherPred(body, options) {

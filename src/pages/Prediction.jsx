@@ -42,7 +42,7 @@ const Prediction = () => {
     setaccidentOnlyData(accidentOnlyData);
 
     let prediction = await prediction_();
-
+    console.log(prediction.Result);
     setpredictionData(prediction.Result);
   };
 
@@ -83,13 +83,15 @@ const Prediction = () => {
           marginTop: 24,
         }}
       >
-        Want to add more pages? Please refer to{' '}
-        <a href="https://pro.ant.design/docs/block-cn" target="_blank" rel="noopener noreferrer">
-          use block
-        </a>
       </p>
+      <p>Currently there are {accidentOnlyData.length} accident. </p>
+      <ul>
+            {predictionData.map((value, index) => (
+                <li key={index}>{value.id}{". "}{value.accMsg}<br/>{value.accInfo}</li>
+            ))}
+        </ul>
       <Map accidentData={accidentOnlyData} />
-      <p>{predictionData}</p>
+      
     </PageHeaderWrapper>
   );
 };

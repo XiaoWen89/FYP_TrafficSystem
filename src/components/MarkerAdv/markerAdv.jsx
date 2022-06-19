@@ -1,11 +1,11 @@
 import React from 'react'
 
-const Marker = ({text}) => {
+const MarkerAdv = ({text}) => {
     return(
         <div style={{
             color: 'white',
-            background: text === "Accident" ? "red" : (text === "Diversion" ? "orange" : (text === "Roadwork" ? "yellow" : "'grey'")),
-            padding: '5px 5px',
+            background: text === "left" ? "red" :  "yellow",
+            padding: '7px 7px',
             display: 'inline-flex',
             textAlign: 'center',
             alignItems: 'center',
@@ -15,9 +15,9 @@ const Marker = ({text}) => {
             opacity: 0.7,
             fontSize: '10px',
         }}>
-            {text === "Accident" ? "!" : (text === "Diversion" ? "X" : (text === "Roadwork" ? "W" : "?"))}
+            
         </div>
     )
 }
 
-export default Marker;
+export default MarkerAdv;

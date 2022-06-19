@@ -76,10 +76,22 @@ def roadWorkAdv():
 def prediction():
     accidentlist=incidentShow()["value"]
     resultList=[]
+    if len(accidentlist)==0:
+        resultList=[{"id":None,"accMsg":None,"accInfo":"Currently no Accident, this is test data."}]
+        accidentlist=[{
+            "Type": "Roadwork",
+            "Latitude": 1.2780135743523675,
+            "Longitude": 103.82390919555351,
+            "Message": "(19/6)00:56 Roadworks on AYE (towards Tuas) at Lower Delta Rd Exit."
+        }]
+        
+    count=1
     for accident in accidentlist:
         modelSe, modelDur,modelDis=loadModel()
         weather=getWeatherfromAPI()
-        result=predictionforAcc(modelSe, modelDur,modelDis,weather,accident) 
+        resultInfor="Prediction-: "+predictionforAcc(modelSe, modelDur,modelDis,weather,accident)
+        accInfo="Accident-: "+ accident["Message"].split(".")[0]
+        result={"id":count,"accMsg":accInfo,"accInfo":resultInfor}
         resultList.append(result)
     return {"Result":resultList}
 

@@ -487,7 +487,7 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
 #6)save best model
 #saveModel(modelSe,"modelSe.joblib")
 #saveModel(modelDur,"modelDur.joblib")
-#saveModel(modelDis,"modelDis.joblib")
+##saveModel(modelDis,"modelDis.joblib")
 
 #7)load Model
 #modelSe, modelDur,modelDis=loadModel()

@@ -38,6 +38,12 @@ export default [
         component: './Prediction',
       },
       {
+        path: '/dashboard/roadWork',
+        name: 'Roadwork Advice',
+        icon: '',
+        component: './roadWork',
+      },
+      {
         component: './404',
       },
     ],
