@@ -94,7 +94,7 @@ def preprocess():
     adProcessed["Temperature(C)"] = round((adProcessed["Temperature(F)"]-32)*5/9,2)
     adProcessed["Wind_Chill(C)"] = round((adProcessed["Wind_Chill(F)"]-32)*5/9,2)
     adProcessed["Visibility(km)"] = round(adProcessed["Visibility(mi)"]*1.61,2)
-    adProcessed["Wind_Speed(m/s)"] = round(adProcessed["Wind_Speed(mph)"]*0.447,2)
+    adProcessed["Wind_Speed(knots)"] = round(adProcessed["Wind_Speed(mph)"]/1.15,2)
     adProcessed["Distance_km"] = round(adProcessed["Distance(mi)"]*1.61,2)
     
     # Drop the original features    
@@ -112,7 +112,7 @@ def analysisWeather():
     # relationship of weather with Severity
     f, axes = plt.subplots(5, 2, figsize=(20, 30))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
-    ad["Severity"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Temperature(F)', ax=axes[0, 1])
+    ad["Severity"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Severity"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Humidity(%)', ax=axes[1, 1])
@@ -121,10 +121,10 @@ def analysisWeather():
     ad["Severity"].groupby(pd.cut(ad['Pressure(in)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Pressure(in)', ax=axes[2, 1])
 
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
-    ad["Severity"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Visibility(mi)', ax=axes[3, 1])
+    ad["Severity"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Visibility(km)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(m/s)'], ax=axes[4, 0]).set_title('Wind_Speed(m/s) Distribution')
-    ad["Severity"].groupby(pd.cut(ad['Wind_Speed(m/s)'], 10)).mean().plot( ylabel='Mean Severity', title='Mean Severity of Wind_Speed(mph)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(knots) Distribution')
+    ad["Severity"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Severity', title='Mean Severity of Wind_Speed(knots)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Severity", y=0.95, fontsize=20)
     
@@ -139,7 +139,7 @@ def analysisDuration():
     # relationship of weather with Duration
     f, axes = plt.subplots(5, 2, figsize=(20, 30))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
-    ad["Duration"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Temperature(F)', ax=axes[0, 1])
+    ad["Duration"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Duration"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Humidity(%)', ax=axes[1, 1])
@@ -150,8 +150,8 @@ def analysisDuration():
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
     ad["Duration"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Visibility(mi)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(m/s)'], ax=axes[4, 0]).set_title('Wind_Speed(m/s) Distribution')
-    ad["Duration"].groupby(pd.cut(ad['Wind_Speed(m/s)'], 10)).mean().plot( ylabel='Mean Duration', title='Mean Duration of Wind_Speed(mph)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(knots) Distribution')
+    ad["Duration"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Duration', title='Mean Duration of Wind_Speed(knots)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Duration", y=0.95, fontsize=20)
     
@@ -167,7 +167,7 @@ def analysisDistance():
     # relationship of weather with Duration
     f, axes = plt.subplots(5, 2, figsize=(20, 30))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
-    ad["Distance_km"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Temperature(F)', ax=axes[0, 1])
+    ad["Distance_km"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Distance_km"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Humidity(%)', ax=axes[1, 1])
@@ -178,8 +178,8 @@ def analysisDistance():
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
     ad["Distance_km"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Visibility(mi)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(m/s)'], ax=axes[4, 0]).set_title('Wind_Speed(m/s) Distribution')
-    ad["Distance_km"].groupby(pd.cut(ad['Wind_Speed(m/s)'], 10)).mean().plot( ylabel='Mean Distance', title='Mean Distance of Wind_Speed(mph)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(m/s) Distribution')
+    ad["Distance_km"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Distance', title='Mean Distance of Wind_Speed(knots)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Distance", y=0.95, fontsize=20)
     
@@ -349,7 +349,7 @@ def DT(x_train, x_test, y_train, y_test):
 
 def RF(x_train, x_test, y_train, y_test):
     print("RF")
-    rf=DecisionTreeClassifier()
+    rf=RandomForestClassifier()
     rf=rf.fit(x_train, y_train)
     
     y_pred = rf.predict(x_test)
@@ -369,7 +369,7 @@ def RF(x_train, x_test, y_train, y_test):
 def compare(x_train, x_test, y_train, y_test):
     scoreknn, modelknn = Knn(x_train, x_test, y_train, y_test)
     scorekdt,modeldt = DT(x_train, x_test, y_train, y_test)
-    scorerf,modelrf = RF(x_train, x_test, y_train, y_test)
+    scorerf,modelrf = DT(x_train, x_test, y_train, y_test)
 
     bestScore=scoreknn
     modelName = "knn"
@@ -405,7 +405,7 @@ def loadModel():
     return modelSe,modelDur,modelDur
 #pending weather API
 def getWeatherfromAPI():
-    weather=pd.DataFrame({'Humidity(%)':[0.0], 'Pressure(in)':[100],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[18], 'Temperature(C)':[20], 'Wind_Chill(C)':[0], 'Visibility(km)':[19], 'Wind_Speed(m/s)':[33.3], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[0], 'Wind_E':[1],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
+    weather=pd.DataFrame({'Humidity(%)':[100.0], 'Pressure(in)':[29.79],'Precipitation(in)':[0.00], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[6], 'Hour':[20], 'Temperature(C)':[30], 'Wind_Chill(C)':[30], 'Visibility(km)':[3], 'Wind_Speed(knots)':[3.6], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[0], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[1],'Wind_V':[0],'Wind_W':[0]})
     return weather
 
 def timesplit(accident):
@@ -485,9 +485,9 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
 #modelSe,modelDur,modelDis =bestModel(x_train_Se, x_test_Se, y_train_Se, y_test_Se,x_train_Du, x_test_Du, y_train_Du, y_test_Du,x_train_Dis, x_test_Dis, y_train_Dis, y_test_Dis)
 
 #6)save best model
-#saveModel(modelSe,"modelSe.joblib")
-#saveModel(modelDur,"modelDur.joblib")
-##saveModel(modelDis,"modelDis.joblib")
+#saveModel(modelSe,"api\modelSe.joblib")
+##saveModel(modelDur,"api\modelDur.joblib")
+#saveModel(modelDis,"api\modelDis.joblib")
 
 #7)load Model
 #modelSe, modelDur,modelDis=loadModel()

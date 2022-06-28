@@ -12,7 +12,7 @@ const Footer = () => {
   return (
     <DefaultFooter
       //copyright={`${currentYear} ${defaultMessage}`}
-      copyright={`${currentYear} Produced by xxxx`}
+      copyright={`${currentYear} Produced by FYP-22-S2-18P SIM FYP Group`}
       /*links={[
         {
           key: 'Ant Design Pro',
