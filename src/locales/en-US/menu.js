@@ -13,6 +13,7 @@ export default {
   'menu.dashboard.Monitoring': 'Monitoring',
   'menu.dashboard.Prediction': 'Prediction',
   'menu.dashboard.Roadwork Advice': 'Roadwork Advice',
+  'menu.dashboard.forcasting': 'forcasting',
   'menu.dashboard.workplace': 'Workplace',
   'menu.exception.403': '403',
   'menu.exception.404': '404',

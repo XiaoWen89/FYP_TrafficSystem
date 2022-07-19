@@ -2,12 +2,13 @@ import time
 import requests
 import os
 import json
+import utils
+from math import dist
 from flask import Flask
 from flask import request
 from dotenv import load_dotenv
 from preWeather import getWeatherfromAPI,predictionforAcc,loadModel,timesplit
-
-import utils
+from preRealTime import loadModelF, nextXhour, possibility
 
 
 load_dotenv()
@@ -79,16 +80,22 @@ def prediction():
     if len(accidentlist)==0:
         resultList=[{"id":None,"accMsg":None,"accInfo":"Currently no Accident, this is test data."}]
         accidentlist=[{
-            "Type": "Roadwork",
+            "Type": "Accident",
             "Latitude": 1.2780135743523675,
             "Longitude": 103.82390919555351,
-            "Message": "(19/6)00:56 Roadworks on AYE (towards Tuas) at Lower Delta Rd Exit."
+            "Message": "(5/7)23:50 Accident on AYE (towards Tuas) at Lower Delta Rd Exit."
         }]
         
     count=1
     for accident in accidentlist:
         modelSe, modelDur,modelDis=loadModel()
-        weather=getWeatherfromAPI()
+        time=timesplit(accident).strftime('%Y-%m-%dT%H:%M:%S')
+        temp=getAirTemp(time,accident)
+        weatherCondition=get2HourWeatherCon(time,accident)
+        windDirection=getWindDirection(time,accident)  
+        humidity=gethumidity(time,accident)
+        weather=getWeatherfromAPI(humidity,temp,weatherCondition,windDirection)
+        #print(weather)
         resultInfor="Prediction-: "+predictionforAcc(modelSe, modelDur,modelDis,weather,accident)
         accInfo="Accident-: "+ accident["Message"].split(".")[0]
         result={"id":count,"accMsg":accInfo,"accInfo":resultInfor}
@@ -139,13 +146,43 @@ def get2HourWeatherPred():
 
     return data
 
-@app.route('/apis/getAirTemp', methods=['POST'])
-def getAirTemp():
-    data_api = os.environ.get('AIR_TEMP_API')
-
-    request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+@app.route("/apis/get2HourWeatherCon", methods=["GET", "POST"])
+def get2HourWeatherCon(request_datetime,accident):
+    data_api_c = os.environ.get('WEATHER_FORECAST_2H_API')
+    #request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
     params={"date_time":request_datetime}
 
+    data = None
+    try:
+        response=requests.get(data_api_c, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processWeatherData(reponse_data)
+
+    point1 = (accident["Latitude"],accident["Longitude"])
+    smallDis=10
+    WeatherConditionS=''
+    for area in data['data']:
+        print(area)
+        point2= (area['location']['latitude'],area['location']['longitude'])
+        dis_math = dist(point1,point2)
+        
+        if smallDis>dis_math:
+           smallDis=dis_math
+           WeatherConditionS=area["forecast"]   
+    print(WeatherConditionS)
+    return WeatherConditionS
+
+@app.route('/apis/getAirTemp', methods=["GET","POST"])
+def getAirTemp(request_datetime,accident):
+    data_api = os.environ.get('AIR_TEMP_API')
+    #request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
     data = None
     try:
         response=requests.get(data_api, params=params)
@@ -157,8 +194,77 @@ def getAirTemp():
         
         if reponse_data['api_info']['status'] == "healthy":
             data = utils.processTempData(reponse_data)
+    
+    point1 = (accident["Latitude"],accident["Longitude"])
+    smallDis=10
+    temp=0 
+    for area in data['data']:
+        point2= (area['location']['latitude'],area['location']['longitude'])
+        dis_math = dist(point1,point2)
+        
+        if smallDis>dis_math:
+           smallDis=dis_math
+           temp=area["temp"] 
+    return temp
 
-    return data
+@app.route('/apis/getWindDirection', methods=["GET","POST"])
+def getWindDirection(request_datetime,accident):
+    data_api = os.environ.get('WIND_DIRECTION_API')
+    #request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
+    data = None
+    try:
+        response=requests.get(data_api, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processWindDirData(reponse_data)
+    
+    point1 = (accident["Latitude"],accident["Longitude"])
+    smallDis=10
+    windDirection=0 
+    for area in data['data']:
+        point2= (area['location']['latitude'],area['location']['longitude'])
+        dis_math = dist(point1,point2)
+        
+        if smallDis>dis_math:
+           smallDis=dis_math
+           windDirection=area["direction"] 
+    return windDirection
+
+@app.route('/apis/gethumidity', methods=["GET","POST"])
+def gethumidity(request_datetime,accident):
+    data_api = os.environ.get('HUMIDITY_API')
+    #request_datetime = request.data.decode('UTF-8') #eg. 2022-06-18T08:13:21
+    params={"date_time":request_datetime}
+    data = None
+    try:
+        response=requests.get(data_api, params=params)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+    else:
+        reponse_data = response.json()
+        
+        if reponse_data['api_info']['status'] == "healthy":
+            data = utils.processHumidityData(reponse_data)
+    
+    point1 = (accident["Latitude"],accident["Longitude"])
+    smallDis=10
+    humidity=0 
+    for area in data['data']:
+        point2= (area['location']['latitude'],area['location']['longitude'])
+        dis_math = dist(point1,point2)
+        
+        if smallDis>dis_math:
+           smallDis=dis_math
+           humidity=area["humidity"] 
+           
+    return humidity
 
 @app.route('/apis/getWindSpeed', methods=['POST'])
 def getWindSpeed():
@@ -180,6 +286,16 @@ def getWindSpeed():
             data = utils.processWindData(reponse_data)
 
     return data
+
+@app.route('/apis/forcasting', methods=["GET","POST"])
+def forcasting():
+    hour = int(request.data.decode('UTF-8'))
+    print(hour)
+    modelAcc =loadModelF()
+    forcastingResult=nextXhour(modelAcc,hour)
+    data=possibility(forcastingResult)
+    print(data)
+    return {"data":data}
 
 if __name__ == '__main__':
     app.run(debug=True)

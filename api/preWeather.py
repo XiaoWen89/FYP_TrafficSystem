@@ -1,10 +1,17 @@
+from calendar import month
 from distutils.log import info
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import datetime
+import os
+import requests
+import utils
+
+
 import matplotlib.pyplot as plt
 from seaborn import displot
+from flask import request
 
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit,GridSearchCV
@@ -19,6 +26,8 @@ from sklearn.metrics import classification_report
 
 from joblib import dump, load
 
+#https://www.nea.gov.sg/weather/
+#http://www.weather.gov.sg/weather-currentobservations-visibility/
 
 
 def preprocess():
@@ -28,8 +37,12 @@ def preprocess():
     
     #Data Preprocessing
     
-    #1) Drop irrelevant columns
+    #1) Drop columns
+    #irrelevant columns
     data_preprocessed_ad = ad.drop(columns=['ID','Start_Lat','End_Lat','Start_Lng','End_Lng','Street','City','County', 'Country','State','Zipcode','Timezone','Airport_Code','Number','Weather_Timestamp'])
+    
+    #information cannot get from the API
+    data_preprocessed_ad=data_preprocessed_ad.drop(columns=['Wind_Chill(F)','Precipitation(in)','Side', 'Amenity','Bump', 'Crossing', 'Give_Way', 'Junction', 'No_Exit', 'Railway','Roundabout', 'Station', 'Stop', 'Traffic_Calming', 'Traffic_Signal','Turning_Loop', 'Sunrise_Sunset'])
     
     #Change data type
     data_preprocessed_ad['Start_Time'] = pd.to_datetime(data_preprocessed_ad['Start_Time'],errors='coerce')
@@ -49,7 +62,7 @@ def preprocess():
     #print(missing_value_40_df)
     
     #3)Replace other missing value with mean value
-    numerical_missing = ['Wind_Chill(F)','Wind_Speed(mph)', 'Visibility(mi)','Humidity(%)', 'Temperature(F)', 'Pressure(in)','Precipitation(in)']
+    numerical_missing = ['Wind_Speed(mph)', 'Visibility(mi)','Humidity(%)', 'Temperature(F)', 'Pressure(in)']
     categorical_missing = ['Weather_Condition','Wind_Direction']
         
     # For numerical columns
@@ -82,8 +95,8 @@ def preprocess():
     adProcessed.drop(index_names2, inplace = True)
     
     # Type of accdient
-    adProcessed['Description_Acc'] = np.where(adProcessed['Description'].str.contains('- Accident', case=False, na = False), 1, 0)
-    adProcessed['Description_Clo'] = np.where(adProcessed['Description'].str.contains('- Road closed', case=False, na = False), 1, 0)
+    #adProcessed['Description_Acc'] = np.where(adProcessed['Description'].str.contains('ccident', case=False, na = False), 1, 0)
+    #adProcessed['Description_Clo'] = np.where(adProcessed['Description'].str.contains('- Road closed', case=False, na = False), 1, 0)
     
     # Transform Month/week/Hour to different features
     adProcessed["Month"] = adProcessed["Start_Time"].dt.month
@@ -92,14 +105,14 @@ def preprocess():
     
     # Transfer unit
     adProcessed["Temperature(C)"] = round((adProcessed["Temperature(F)"]-32)*5/9,2)
-    adProcessed["Wind_Chill(C)"] = round((adProcessed["Wind_Chill(F)"]-32)*5/9,2)
     adProcessed["Visibility(km)"] = round(adProcessed["Visibility(mi)"]*1.61,2)
-    adProcessed["Wind_Speed(knots)"] = round(adProcessed["Wind_Speed(mph)"]/1.15,2)
+    adProcessed["Wind_Speed(km/h)"] = round(adProcessed["Wind_Speed(mph)"]*1.609,2)
     adProcessed["Distance_km"] = round(adProcessed["Distance(mi)"]*1.61,2)
+    adProcessed["Pressure(mbar)"] = round(adProcessed["Pressure(in)"]/0.02953,2)
     
     # Drop the original features    
     #adProcessed=adProcessed.drop(columns=["Temperature(F)","Wind_Chill(F)","Visibility(mi)","Wind_Speed(mph)","Distance(mi)","Civil_Twilight", "Nautical_Twilight","Astronomical_Twilight"])
-    adProcessed=adProcessed.drop(columns=["Temperature(F)","Wind_Chill(F)","Visibility(mi)","Wind_Speed(mph)","Distance(mi)","Civil_Twilight","Description", "Nautical_Twilight","Astronomical_Twilight"])   
+    adProcessed=adProcessed.drop(columns=["Temperature(F)","Visibility(mi)","Wind_Speed(mph)","Distance(mi)","Pressure(in)","Civil_Twilight","Description", "Nautical_Twilight","Astronomical_Twilight"])   
     # print(adProcessed.shape)
     # Save the processed data
     adProcessed.to_csv(r"C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\adProcessed.csv", index=False)
@@ -110,21 +123,21 @@ def analysisWeather():
     # Load the Data    
     ad = pd.read_csv(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\adProcessed.csv')
     # relationship of weather with Severity
-    f, axes = plt.subplots(5, 2, figsize=(20, 30))
+    f, axes = plt.subplots(5, 2, figsize=(10, 20))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
     ad["Severity"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Severity"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Humidity(%)', ax=axes[1, 1])
 
-    sns.histplot(ad['Pressure(in)'], ax=axes[2, 0]).set_title('Pressure(in) Distribution')
-    ad["Severity"].groupby(pd.cut(ad['Pressure(in)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Pressure(in)', ax=axes[2, 1])
+    sns.histplot(ad['Pressure(mbar)'], ax=axes[2, 0]).set_title('Pressure(mbar) Distribution')
+    ad["Severity"].groupby(pd.cut(ad['Pressure(mbar)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Pressure(mbar)', ax=axes[2, 1])
 
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
     ad["Severity"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Severity', title='Mean Severity of Visibility(km)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(knots) Distribution')
-    ad["Severity"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Severity', title='Mean Severity of Wind_Speed(knots)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(km/h)'], ax=axes[4, 0]).set_title('Wind_Speed(km/h) Distribution')
+    ad["Severity"].groupby(pd.cut(ad['Wind_Speed(km/h)'], 10)).mean().plot( ylabel='Mean Severity', title='Mean Severity of Wind_Speed(km/s)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Severity", y=0.95, fontsize=20)
     
@@ -137,26 +150,26 @@ def analysisDuration():
      # Load the Data    
     ad = pd.read_csv(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\adProcessed.csv')
     # relationship of weather with Duration
-    f, axes = plt.subplots(5, 2, figsize=(20, 30))
+    f, axes = plt.subplots(5, 2, figsize=(10, 20))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
     ad["Duration"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Duration"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Humidity(%)', ax=axes[1, 1])
 
-    sns.histplot(ad['Pressure(in)'], ax=axes[2, 0]).set_title('Pressure(in) Distribution')
-    ad["Duration"].groupby(pd.cut(ad['Pressure(in)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Pressure(in)', ax=axes[2, 1])
+    sns.histplot(ad['Pressure(mbar)'], ax=axes[2, 0]).set_title('Pressure(mbar) Distribution')
+    ad["Duration"].groupby(pd.cut(ad['Pressure(mbar)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Pressure(mbar)', ax=axes[2, 1])
 
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
-    ad["Duration"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Visibility(mi)', ax=axes[3, 1])
+    ad["Duration"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Duration', title='Mean Duration of Visibility(km)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(knots) Distribution')
-    ad["Duration"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Duration', title='Mean Duration of Wind_Speed(knots)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(km/h)'], ax=axes[4, 0]).set_title('Wind_Speed(km/h) Distribution')
+    ad["Duration"].groupby(pd.cut(ad['Wind_Speed(km/h)'], 10)).mean().plot( ylabel='Mean Duration', title='Mean Duration of Wind_Speed(km/h)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Duration", y=0.95, fontsize=20)
     
     f=plt.plot()
-    #plt.show()
+    plt.show()
     return None
 
 
@@ -165,21 +178,21 @@ def analysisDistance():
      # Load the Data    
     ad = pd.read_csv(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\adProcessed.csv')
     # relationship of weather with Duration
-    f, axes = plt.subplots(5, 2, figsize=(20, 30))
+    f, axes = plt.subplots(5, 2, figsize=(10, 20))
     sns.histplot(ad['Temperature(C)'], ax=axes[0, 0]).set_title('Temperature(C) Distribution')
     ad["Distance_km"].groupby(pd.cut(ad['Temperature(C)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Temperature(C)', ax=axes[0, 1])
     
     sns.histplot(ad['Humidity(%)'], ax=axes[1, 0]).set_title('Humidity(%) Distribution')
     ad["Distance_km"].groupby(pd.cut(ad['Humidity(%)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Humidity(%)', ax=axes[1, 1])
 
-    sns.histplot(ad['Pressure(in)'], ax=axes[2, 0]).set_title('Pressure(in) Distribution')
-    ad["Distance_km"].groupby(pd.cut(ad['Pressure(in)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Pressure(in)', ax=axes[2, 1])
+    sns.histplot(ad['Pressure(mbar)'], ax=axes[2, 0]).set_title('Pressure(mbar) Distribution')
+    ad["Distance_km"].groupby(pd.cut(ad['Pressure(mbar)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Pressure(mbar)', ax=axes[2, 1])
 
     sns.histplot(ad['Visibility(km)'], ax=axes[3, 0]).set_title('Visibility(km) Distribution')
-    ad["Distance_km"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Visibility(mi)', ax=axes[3, 1])
+    ad["Distance_km"].groupby(pd.cut(ad['Visibility(km)'], 10)).mean().plot(ylabel='Mean Distance', title='Mean Distance of Visibility(km)', ax=axes[3, 1])
     
-    sns.histplot(ad['Wind_Speed(knots)'], ax=axes[4, 0]).set_title('Wind_Speed(m/s) Distribution')
-    ad["Distance_km"].groupby(pd.cut(ad['Wind_Speed(knots)'], 10)).mean().plot( ylabel='Mean Distance', title='Mean Distance of Wind_Speed(knots)', ax=axes[4, 1])
+    sns.histplot(ad['Wind_Speed(km/h)'], ax=axes[4, 0]).set_title('Wind_Speed(km/h) Distribution')
+    ad["Distance_km"].groupby(pd.cut(ad['Wind_Speed(km/h)'], 10)).mean().plot( ylabel='Mean Distance', title='Mean Distance of Wind_Speed(km/h)', ax=axes[4, 1])
     
     plt.suptitle("Temperature, Humidity, Pressure, Visibility and Wind Speed - Distribution && Mean Distance", y=0.95, fontsize=20)
     
@@ -205,10 +218,11 @@ def ecoding():
     ad['Weather_Clear'] = np.where(ad['Weather_Condition'].str.contains('Clear', case=False, na = False), 1, 0)
     ad['Weather_Cloudy'] = np.where(ad['Weather_Condition'].str.contains('Cloud', case=False, na = False), 1, 0)
     ad['Weather_Overcast'] = np.where(ad['Weather_Condition'].str.contains('Overcast', case=False, na = False), 1, 0)
-    ad['Weather_Haze'] = np.where(ad['Weather_Condition'].str.contains('Fog|Haze', case=False, na = False), 1, 0)
+    ad['Weather_Haze'] = np.where(ad['Weather_Condition'].str.contains('Fog|Haze|Drizzle', case=False, na = False), 1, 0)
     ad['Weather_Rain'] = np.where(ad['Weather_Condition'].str.contains('Rain', case=False, na = False), 1, 0)
-    '''
     ad['Weather_Thunderstorm'] = np.where(ad['Weather_Condition'].str.contains('Thunderstorms|T-Storm', case=False, na = False), 1, 0)
+    '''
+    
     ad['Weather_Windy'] = np.where(ad['Weather_Condition'].str.contains('Windy|Squalls', case=False, na = False), 1, 0)
     ad['Weather_Hail'] = np.where(ad['Weather_Condition'].str.contains('Hail|Ice Pellets', case=False, na = False), 1, 0)
     ad['Weather_Thunder'] = np.where(ad['Weather_Condition'].str.contains('Thunder', case=False, na = False), 1, 0)
@@ -229,15 +243,7 @@ def ecoding():
     onehot_df = pd.get_dummies(ad['Wind_Direction'], prefix='Wind')
     ad = pd.concat([ad, onehot_df], axis=1)
     ad=ad.drop(columns=['Weather_Condition','Wind_Direction'])
-    '''
-    #Label Encoding
-    label_encoding_features = ['Side', 'Amenity','Bump', 'Crossing', 'Give_Way', 'Junction', 'No_Exit', 'Railway','Roundabout', 'Station', 'Stop', 'Traffic_Calming', 'Traffic_Signal','Turning_Loop', 'Sunrise_Sunset']
-
-    for feature in label_encoding_features:
-        ad[feature] = LabelEncoder().fit_transform(ad[feature])
-    '''
-    ad=ad.drop(columns=['Side', 'Amenity','Bump', 'Crossing', 'Give_Way', 'Junction', 'No_Exit', 'Railway','Roundabout', 'Station', 'Stop', 'Traffic_Calming', 'Traffic_Signal','Turning_Loop', 'Sunrise_Sunset'])
-    
+        
     corr_matrix = ad.corr()
     relationshipS =corr_matrix["Severity"].sort_values(ascending=False)
     relationshipD =corr_matrix["Duration"].sort_values(ascending=False)
@@ -249,8 +255,10 @@ def ecoding():
     relationship.to_csv(r"C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\relationship.csv",index=True)
     
     #drop no relevant features
-    adrelated=ad.drop(columns=['Start_Time','End_Time'])
-        
+    
+    adrelated=ad.drop(columns=['Start_Time','End_Time','Wind_Speed(km/h)' ])
+    
+    
     adrelated.to_csv(r"C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\inputData\adrelated.csv",index=False)
     return None
 
@@ -265,10 +273,10 @@ def datasplit():
     #print(bin_dur)
     #print(bin_dis)
     '''
-    bins1 =[0,30,60,180,360,2000]
-    labels1=[0,1,2,3,4]
+    bins1 =[0,120,240,360,2000]
+    labels1=[0,1,2,3]
     ad['DurationBin'] = pd.cut(ad.Duration, bins=bins1, labels=labels1)
-    bins2 =[-0.01,0.5,1.0,2.0,10.0]
+    bins2 =[-0.01,0.5,1.0,2.0,20.0]
     labels2=[0,1,2,3]
     ad['Distance_kmBin'] = pd.cut(ad.Distance_km, bins=bins2, labels=labels2)
     #print(bin_dis)
@@ -308,18 +316,60 @@ def Knn(x_train, x_test, y_train, y_test):
     y_pred = knn1.predict(x_test)
     
     #Checking performance our model with classification report.
-    score = metrics.accuracy_score(y_test, y_pred)
-    print(score)
+    scoreTesting = metrics.accuracy_score(y_test, y_pred)
+    print("Score for Testing:", scoreTesting)
     #report = classification_report(y_test, y_pred)
     
     # check for overfitting
     # using X_train to do predict and compare with X_test result
     y_pred = knn1.predict(x_train)
-
-    # check our models performance
-    print(metrics.accuracy_score(y_train, y_pred))
+    scoreTraining = metrics.accuracy_score(y_train, y_pred)
+    print("Score for Training:",scoreTraining)
     
-    return score,knn1
+    #Hyperparameter fine-tuning
+    if (scoreTraining-scoreTesting)>0.15:
+        print("There is a over fiting doing Hyperparameter fine-tuning")
+        #List Hyperparameters that we want to tune.
+        n_neighbors = list(range(1, 15))
+
+        #Convert to dictionary
+        hyperparameters = dict(n_neighbors=n_neighbors)
+
+        #Create new KNN object
+        knn2 = KNeighborsClassifier()
+        
+        #Use GridSearch
+        clf = GridSearchCV(knn2, hyperparameters, cv=10, scoring='accuracy')
+        #Fit the model
+        best_model_knn = clf.fit(x_train, y_train)
+        print("After Turning")
+        #Predict test data set.
+        y_pred = best_model_knn.predict(x_test)
+        
+        scoreTestingT = metrics.accuracy_score(y_test, y_pred)
+        print("Score for Testing:",scoreTestingT)
+        
+        # check for overfitting
+        # using X_train to do predict and compare with X_test result
+        y_pred = best_model_knn.predict(x_train)
+        scoreTrainingT = metrics.accuracy_score(y_train, y_pred)
+                  
+        print("Score for Training:",scoreTrainingT)
+        
+        if (scoreTrainingT-scoreTestingT)>0.15:
+            score=0
+            knnfinal=knn2
+        else:
+            score=scoreTestingT
+            knnfinal=knn2
+    else:
+        score=scoreTesting
+        knnfinal=knn1
+    
+    print("finalscore:",score)
+    
+    return score,knnfinal
+
 
 def DT(x_train, x_test, y_train, y_test):
     
@@ -329,23 +379,58 @@ def DT(x_train, x_test, y_train, y_test):
     
     y_pred = dt.predict(x_test)
     
-    score = metrics.accuracy_score(y_test, y_pred)
-    print(score)
+    scoreTesting = metrics.accuracy_score(y_test, y_pred)
+    print("Score for Testing:", scoreTesting)
     report = classification_report(y_test, y_pred)
     
     # check for overfitting
     # using X_train to do predict and compare with X_test result
     y_pred = dt.predict(x_train)
-
-    # check our models performance
-    print(metrics.accuracy_score(y_train, y_pred))
+    scoreTraining= metrics.accuracy_score(y_train, y_pred)
+    print("Score for Training:",scoreTraining)
     
-    '''
-    print('max_depth:', dtc_best.best_estimator_.get_params()['max_depth'])
-    print('min_samples_leaf:', dtc_best.best_estimator_.get_params()['min_samples_leaf'])
-    print('criterion:', dtc_best.best_estimator_.get_params()['criterion'])
-    '''
-    return score,dt
+    #Hyperparameter fine-tuning
+    if (scoreTraining-scoreTesting)>0.15: 
+        print("There is a over fiting doing Hyperparameter fine-tuning")
+        # Create the parameter grid based on the results of random search 
+        params = {
+                        'max_depth': [2, 3, 5, 10, 20],
+                        'min_samples_leaf': [5, 10, 20, 50, 100],
+                        'criterion': ["gini", "entropy"]
+                    }
+
+        clf = DecisionTreeClassifier()
+
+        dtc_best = GridSearchCV(estimator=clf, param_grid=params, 
+                           cv=4, n_jobs=-1, verbose=1, scoring = "accuracy")
+
+        dtc_best.fit(x_train, y_train)
+        print("After Turning")
+        
+        #Predict test data set
+        y_pred = dtc_best.predict(x_test)
+        scoreTestingT=metrics.accuracy_score(y_test, y_pred)
+        print("Score for Testing:",scoreTestingT)
+        
+        # check for overfitting
+        # using X_train to do predict and compare with X_test result
+        y_pred = dtc_best.predict(x_train)
+        scoreTrainingT=metrics.accuracy_score(y_train, y_pred)
+        print("score for Training",scoreTrainingT)
+        
+        if (scoreTrainingT-scoreTestingT)>0.15:
+            scoreTestingT=0
+            dtfinal=dtc_best
+        else:
+            score=scoreTestingT
+            dtfinal=dtc_best
+    else:
+        score=scoreTesting
+        dtfinal=dt
+    
+    print("final score:", score)
+  
+    return score,dtfinal
 
 def RF(x_train, x_test, y_train, y_test):
     print("RF")
@@ -354,22 +439,76 @@ def RF(x_train, x_test, y_train, y_test):
     
     y_pred = rf.predict(x_test)
     
-    score = metrics.accuracy_score(y_test, y_pred)
-    print(score)
+    scoreTesting = metrics.accuracy_score(y_test, y_pred)
+    print("Score for Testing:", scoreTesting)
     report = classification_report(y_test, y_pred)
 
     # check for overfitting
     # using X_train to do predict and compare with X_test result
     y_pred = rf.predict(x_train)
+    scoreTraining = metrics.accuracy_score(y_train, y_pred)
+    print("Score for Training:",scoreTraining)
 
-    # check our models performance
-    print(metrics.accuracy_score(y_train, y_pred))
-    return score,rf
+    #Hyperparameter fine-tuning
+    if (scoreTraining-scoreTesting)>0.15: 
+        
+        print("There is a over fiting doing Hyperparameter fine-tuning")
+        
+        # Provide hyperparameter grid parameter
+        # Number of trees in random forest
+        n_estimators = [int(x) for x in np.linspace(start = 2, stop = 30, num = 2)]
+        # Maximum number of levels in tree
+        max_depth = [int(x) for x in np.linspace(2, 10, num = 1)]
+        max_depth.append(None)
+        # Minimum number of samples required to split a node
+        min_samples_split = [2, 5, 10]
+        # Minimum number of samples required at each leaf node
+        min_samples_leaf = [1, 2, 4]
+        # Method of selecting samples for training each tree
+        bootstrap = [True, False]
+
+        # Create the random grid
+        param_grid = {'n_estimators': n_estimators,
+                    'max_depth': max_depth,
+                    'min_samples_split': min_samples_split,
+                    'min_samples_leaf': min_samples_leaf,
+                    'bootstrap': bootstrap}
+        
+        rf1=RandomForestClassifier()
+        
+        rf1= GridSearchCV(estimator = rf1, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 2)
+        
+        rf1=rf1.fit(x_train, y_train)
+        
+        y_pred = rf1.predict(x_test) 
+        scoreTestingT = metrics.accuracy_score(y_test, y_pred)
+        print("Score for Testing:", scoreTestingT)
+        
+        # check for overfitting
+        # using X_train to do predict and compare with X_test result
+        y_pred = rf1.predict(x_train)
+        scoreTrainingT = metrics.accuracy_score(y_train, y_pred)
+        print("Score for Training:",scoreTrainingT)
+        
+        if (scoreTrainingT-scoreTestingT)>0.15:
+            score=0
+            print("Overfitting problem, RF not for use")
+            rffinal=rf1
+        else:
+            score=scoreTestingT
+            rffinal=rf1
+    else:
+        score=scoreTesting
+        rffinal=rf
+    
+    print("final score:", score)
+    
+    return score,rffinal
 
 def compare(x_train, x_test, y_train, y_test):
     scoreknn, modelknn = Knn(x_train, x_test, y_train, y_test)
     scorekdt,modeldt = DT(x_train, x_test, y_train, y_test)
-    scorerf,modelrf = DT(x_train, x_test, y_train, y_test)
+    scorerf,modelrf = RF(x_train, x_test, y_train, y_test)
 
     bestScore=scoreknn
     modelName = "knn"
@@ -404,8 +543,29 @@ def loadModel():
     modelDur = load(r'C:\Users\Sun Xiao Wen\Desktop\SIM BD\FYP\FYP-22-S2-18P\FYP_TrafficSystem\api\modelDis.joblib')
     return modelSe,modelDur,modelDur
 #pending weather API
-def getWeatherfromAPI():
-    weather=pd.DataFrame({'Humidity(%)':[100.0], 'Pressure(in)':[29.79],'Precipitation(in)':[0.00], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[6], 'Hour':[20], 'Temperature(C)':[30], 'Wind_Chill(C)':[30], 'Visibility(km)':[3], 'Wind_Speed(knots)':[3.6], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[0], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[1],'Wind_V':[0],'Wind_W':[0]})
+
+def getWeatherfromAPI(humidity,temp,WeatherCondiction,windDir):
+    
+    now = datetime.datetime.now()
+    day = now.isoweekday()
+
+    weather=pd.DataFrame({'Humidity(%)':[humidity], 'Month':[now.month], 'Day':[day], 'Hour':[now.hour], 'Temperature(C)':[temp], 'Visibility(km)':[14], 'Pressure(mbar)':[1008],'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[0],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Weather_Thunderstorm':[0],'Wind_C':[0], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
+    if "Cloudy" in WeatherCondiction:
+        weather['Weather_Cloudy']=1
+    elif "Fair" in WeatherCondiction:
+        weather['Weather_Fair']=1
+    elif "Rain" in WeatherCondiction:
+            weather['Weather_Rain']=1
+    
+    if windDir>315 or windDir<=45:
+       weather['Wind_N']=1
+    elif windDir>45 or windDir<=135:
+        weather['Wind_E']=1
+    elif windDir>135 or windDir<=225:
+        weather['Wind_S']=1
+    elif windDir>225 or windDir<=315:
+        weather['Wind_W']=1
+    #print(weather['Weather_Rain'],weather['Weather_Fair'])
     return weather
 
 def timesplit(accident):
@@ -423,17 +583,14 @@ def timesplit(accident):
 def endTime(dt_object,resultDur):
     if resultDur==0:
         estEarly=dt_object
-        estLate=dt_object+datetime.timedelta(minutes=30)
+        estLate=dt_object+datetime.timedelta(minutes=120)
     elif resultDur==1:
-        estEarly=dt_object+datetime.timedelta(minutes=30)
-        estLate=dt_object+datetime.timedelta(minutes=60)
+        estEarly=dt_object+datetime.timedelta(minutes=120)
+        estLate=dt_object+datetime.timedelta(minutes=240)
     elif resultDur==2:
-        estEarly=dt_object+datetime.timedelta(minutes=60)
-        estLate=dt_object+datetime.timedelta(minutes=180)
-    elif resultDur==3:
-        estEarly=dt_object+datetime.timedelta(minutes=180)
+        estEarly=dt_object+datetime.timedelta(minutes=240)
         estLate=dt_object+datetime.timedelta(minutes=360)
-    elif resultDur==4:
+    elif resultDur==3:
         estEarly=dt_object+datetime.timedelta(minutes=360)
         estLate=dt_object+datetime.timedelta(minutes=720)
     
@@ -448,7 +605,7 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
     accTimeInfo=timesplit(accident)
     estEarly, estLate=endTime(accTimeInfo,resultDur)
 
-    Durationbin=["0-30 min","30-60 min", "1-3 hour","3-6 hour","more than 6 hour"]
+    Durationbin=["within 2 hour","2-3 hour","3-6 hour","more than 6 hour"]
     Distancebin=["0-500m","500-1000m","1k-2km","more than 2km"]
     
     result= "The Severity level of the accident is "+str(resultSe)+ " the accident will last for "+str(Durationbin[resultDur])+ " and will effect area will be "+ str(Distancebin[resultDis])+". The estimate end time will be "+str(estEarly)+" to "+str(estLate) +"."
@@ -486,13 +643,14 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
 
 #6)save best model
 #saveModel(modelSe,"api\modelSe.joblib")
-##saveModel(modelDur,"api\modelDur.joblib")
+#saveModel(modelDur,"api\modelDur.joblib")
 #saveModel(modelDis,"api\modelDis.joblib")
 
 #7)load Model
 #modelSe, modelDur,modelDis=loadModel()
 
 #8)get weather from API(Pending API)
+#weather=getWeatherfromAPI(20,"Rain","SEE")
 #weather=pd.DataFrame({'Humidity(%)':[100.0], 'Pressure(in)':[30.06],'Precipitation(in)':[0.01], 'Description_Acc':[1], 'Description_Clo':[0], 'Month':[6], 'Day':[4], 'Hour':[14], 'Temperature(C)':[24], 'Wind_Chill(C)':[24], 'Visibility(km)':[16], 'Wind_Speed(m/s)':[5.56], 'Weather_Fair':[0], 'Weather_Clear':[0], 'Weather_Cloudy':[1],'Weather_Overcast':[0], 'Weather_Haze':[0], 'Weather_Rain':[0],'Wind_C':[1], 'Wind_E':[0],'Wind_N':[0], 'Wind_S':[0],'Wind_V':[0],'Wind_W':[0]})
 
 #10)get Accident time information

@@ -65,4 +65,7 @@ export default {
   'pages.searchTable.tenThousand': '0000',
   'pages.searchTable.batchDeletion': 'bacth deletion',
   'pages.searchTable.batchApproval': 'batch approval',
+  'pages.forcasting.nextTwoHour.tab': 'Next 2 Hours',
+  'pages.forcasting.nextTenHour.tab': 'Next 10 Hours',
+  'pages.forcasting.next24Hour.tab': 'Next 24 Hours',
 };

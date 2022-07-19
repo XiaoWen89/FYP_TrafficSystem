@@ -44,6 +44,12 @@ export default [
         component: './roadWork',
       },
       {
+        path: '/dashboard/forcasting',
+        name: 'forcasting',
+        icon: '',
+        component: './forcasting',
+      },
+      {
         component: './404',
       },
     ],

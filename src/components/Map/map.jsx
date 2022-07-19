@@ -4,7 +4,6 @@ import axios from 'axios'
 
 import Marker from '../Marker/Marker'
 import WeatherIcon from '../WeatherIcon/WeatherIcon'
-import { convertCompilerOptionsFromJson } from 'typescript';
 
 const mapStyles = {
   height: '70vh', 
@@ -42,8 +41,9 @@ const Map = (props) => {
 
   return(
     <div style={mapStyles}>
+      {/*keys:'AIzaSyBc4RXXYkZHiW6KveQbOPyFIPd6c9_URf8'*/}
       <GoogleMapReact
-        bootstrapURLKeys={{ key:'AIzaSyBc4RXXYkZHiW6KveQbOPyFIPd6c9_URf8' }}
+        bootstrapURLKeys={{ key:'AIzaSyCQ_DqjXNhkrQq4fQfkGMFUJMX49U-g6Q0' }}
         //defaultCenter={mapCenter}
         defaultCenter={{
           lat: 1.3521,

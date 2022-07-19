@@ -54,3 +54,41 @@ def processWindData(data:dict):
         processed_data.append(element)
 
     return {"data": processed_data}
+
+#combine location and wind info together, return in dict structure
+def processWindDirData(data:dict):
+    processed_data = []
+    readings=data['items'][0]['readings'] #list
+
+    stations=data['metadata']['stations'] #list
+
+    for i in range(len(readings)):
+        element=dict()
+
+        element['name'] = stations[i]['name']
+        element['location'] = stations[i]['location']
+
+        element['direction'] =readings[i]['value']
+
+        processed_data.append(element)
+
+    return {"data": processed_data}
+
+#combine location and wind info together, return in dict structure
+def processHumidityData(data:dict):
+    processed_data = []
+    readings=data['items'][0]['readings'] #list
+
+    stations=data['metadata']['stations'] #list
+
+    for i in range(len(readings)):
+        element=dict()
+
+        element['name'] = stations[i]['name']
+        element['location'] = stations[i]['location']
+
+        element['humidity'] =readings[i]['value']
+
+        processed_data.append(element)
+
+    return {"data": processed_data}

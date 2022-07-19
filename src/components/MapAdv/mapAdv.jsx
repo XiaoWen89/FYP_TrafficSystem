@@ -41,7 +41,7 @@ const MapAdv = (props) => {
   return(
     <div style={mapStyles}>
       <GoogleMapReact
-        bootstrapURLKeys={{ key:'AIzaSyBc4RXXYkZHiW6KveQbOPyFIPd6c9_URf8' }}
+        bootstrapURLKeys={{ key:'AIzaSyCQ_DqjXNhkrQq4fQfkGMFUJMX49U-g6Q0' }}
         //defaultCenter={mapCenter}
         defaultCenter={{
           lat: 1.3521,

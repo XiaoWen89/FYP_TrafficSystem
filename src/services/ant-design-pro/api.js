@@ -101,3 +101,13 @@ export async function getWindSpeed(body, options) {
     ...(options || {})
   })
 }
+
+/** POST /apis/forcasting */
+
+export async function forcasting(body, options) {
+  return request('/apis/forcasting', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
