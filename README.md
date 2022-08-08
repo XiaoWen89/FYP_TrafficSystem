@@ -14,7 +14,7 @@ Frontend -> React (UI credit to Ant Design Pro, can refer its [Github](https://g
 
 Backend -> Flask (python)
 
-Database -> Mongo / MySQL (Need to decide)
+Database -> Mongo
 
 # Environment Prepare
 
