@@ -80,6 +80,14 @@ cd pip install -r requirements.txt
 flask run
 ```
 
+## Database Part
+
+### Install Mongdb and Mongdb compass 
+
+Please refer to the [here](https://www.mongodb.com/try/download/community)
+
+upload user file and incident data
+
 ## More
 
 Credict to [Ant Design Pro](https://pro.ant.design) -> Frontend UI
