@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
 import Map from '../components/Map/Map';
 import { incidentShow, prediction_ } from '../services/ant-design-pro/api';
+import { Card, Row, Col} from 'antd';
 import accidentImage from'./image/accidentLogo.png';
 import green from'./image/ModerateTraffic.png';
 import orange from'./image/moderateCongest.png';
@@ -12,25 +13,14 @@ import amber from'./image/servalCongest.png';
 const Prediction = () => {
   const intl = useIntl();
 
-  //const [accidentData, setAccidentData] = useState([])
   const [accidentOnlyData, setaccidentOnlyData] = useState([]);
   const [predictionData, setpredictionData] = useState([]);
+  const [dataLength, setdataLength] = useState();
 
   useEffect(async () => {
-    //let raw_data = await getAccidentData();
     fetchAccidentData();
-    //let accident_data = raw_data.value;
-    //console.log(accident_data)
-    //setAccidentData(accident_data)
-    //let accident_count = processAccidentData(accident_data);
-    //console.log(accident_count)
-    //setAccidentCountData(accident_count)
   }, []);
-  /*
-    useEffect(() => {
-        console.log(accidentData)
-    }, [accidentData])
-    */
+
   useEffect(() => {
     console.log(accidentOnlyData);
   }, [accidentOnlyData]);
@@ -48,40 +38,14 @@ const Prediction = () => {
 
     let prediction = await prediction_();
     console.log(prediction.Result);
+    console.log(prediction.dataLength);
     setpredictionData(prediction.Result);
+    setdataLength(prediction.dataLength);
   };
 
   return (
-    <PageHeaderWrapper
-    /*
-        content={intl.formatMessage({
-          id: 'pages.admin.subPage.title',
-          defaultMessage: 'This page can only be viewed by admin',
-        })}*/
-    >
-      {/*} <Card>
-          <Alert
-            message={intl.formatMessage({
-              id: 'pages.welcome.alertMessage',
-              defaultMessage: 'Faster and stronger heavy-duty components have been released.',
-            })}
-            type="success"
-            showIcon
-            banner
-            style={{
-              margin: -12,
-              marginBottom: 48,
-            }}
-          />
-          <Typography.Title
-            level={2}
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            <SmileTwoTone /> Ant Design Pro <HeartTwoTone twoToneColor="#eb2f96" /> You
-          </Typography.Title>
-        </Card> */}
+    <PageHeaderWrapper>
+      <Card>
       <p
         style={{
           textAlign: 'center',
@@ -89,13 +53,33 @@ const Prediction = () => {
         }}
       >
       </p>
-      <p>Currently there are {accidentOnlyData.length} accident. </p>
+      <Row>
+      <Col span={14}><Map accidentData={accidentOnlyData} type={"prediction"}/></Col>
+      <Col span={1}></Col>
+      <Col span={9}>
+      <h3>Currently there are {dataLength} accident:  </h3>
+      
+      <h4>
+            {predictionData.map((value, index) => (
+                <li key={index}>{value.id}{". "}{value.accMsg}<br/>
+                {"Prediction: "}<br/>
+                {"- Severity level   : "}{value.accInfo.SeverityLevel}<br/>
+                {"- Effect Area      : "}{value.accInfo.area}<br/>
+                {"- Estimate End Time: "}{value.accInfo.time}<br/>
+                {"-----------------------------------------------------------------------------------------"}</li>
+            ))}
+        </h4>
+      </Col>
+      </Row>
+      </Card>
+      {/*<p>Currently there are {accidentOnlyData.length} accident. </p>
       <ul>
             {predictionData.map((value, index) => (
                 <li key={index}>{value.id}{". "}{value.accMsg}<br/>{value.accInfo}</li>
             ))}
         </ul>
-      <Map accidentData={accidentOnlyData} />
+            <Map accidentData={accidentOnlyData} type={"prediction"}/>*/}
+      {/*
       <br></br>
       <h1 style={{ textAlign: 'center',fontSize: '18px', fontFamily : 'Arial, Helvetica, sans-serif',fontWeight :'bold',right:'50%',left:'50%',marginLeft :'auto',
             marginRight : 'auto'}}>Map Legend</h1>
@@ -150,7 +134,7 @@ const Prediction = () => {
                    
                   </div>
           </div>
-      </div>
+                    </div>*/}
       
     </PageHeaderWrapper>
   );

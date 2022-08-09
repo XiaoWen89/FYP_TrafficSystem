@@ -68,4 +68,16 @@ export default {
   'pages.forcasting.nextTwoHour.tab': 'Next 2 Hours',
   'pages.forcasting.nextTenHour.tab': 'Next 10 Hours',
   'pages.forcasting.next24Hour.tab': 'Next 24 Hours',
+  'pages.forcasting.accident.tab': 'Forcasting for Accident',
+  'pages.forcasting.heavytraffic.tab': 'Forcasting for Heavy Traffic',
+  'pages.reporting.accident.tab': 'Report for Accident',
+  'pages.reporting.heavytraffic.tab': 'Report for Heavy Traffic',
+  'pages.reporting.daily.tab': 'By Date',
+  'pages.reporting.area.tab': 'By Area',
+  'pages.reporting.hour.tab': 'By Hour',
+  'pages.reporting.day.tab': 'By Day',
+  'pages.reporting.summary.tab': 'Summary',
+  'pages.registration.failure': 'registration fail, please retry',
+  'pages.registration.repeat': 'Account exists, please retry',
+  'pages.registration.success': 'Registration successful'
 };

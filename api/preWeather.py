@@ -606,9 +606,10 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
     estEarly, estLate=endTime(accTimeInfo,resultDur)
 
     Durationbin=["within 2 hour","2-3 hour","3-6 hour","more than 6 hour"]
-    Distancebin=["0-500m","500-1000m","1k-2km","more than 2km"]
+    Distancebin=["Less than 500m","500-1000m","1k-2km","more than 2km"]
     
-    result= "The Severity level of the accident is "+str(resultSe)+ " the accident will last for "+str(Durationbin[resultDur])+ " and will effect area will be "+ str(Distancebin[resultDis])+". The estimate end time will be "+str(estEarly)+" to "+str(estLate) +"."
+    result ={"SeverityLevel": str(resultSe), "area":str(Distancebin[resultDis]),"time":str(estLate)}
+    #result= "The Severity level of the accident is "+str(resultSe)+ " the accident will last for "+str(Durationbin[resultDur])+ " and will effect area will be "+ str(Distancebin[resultDis])+". The estimate end time will be "+str(estEarly)+" to "+str(estLate) +"."
     return result
 
 #1)preprocess
@@ -638,15 +639,15 @@ def predictionforAcc(modelSe, modelDur,modelDis,weather,accident):
 #   3. RF
 #score, rf=RF(x_train, x_test, y_train, y_test)
 
-#5)Compare
+#6)Compare
 #modelSe,modelDur,modelDis =bestModel(x_train_Se, x_test_Se, y_train_Se, y_test_Se,x_train_Du, x_test_Du, y_train_Du, y_test_Du,x_train_Dis, x_test_Dis, y_train_Dis, y_test_Dis)
 
-#6)save best model
+#7)save best model
 #saveModel(modelSe,"api\modelSe.joblib")
 #saveModel(modelDur,"api\modelDur.joblib")
 #saveModel(modelDis,"api\modelDis.joblib")
 
-#7)load Model
+#8)load Model
 #modelSe, modelDur,modelDis=loadModel()
 
 #8)get weather from API(Pending API)

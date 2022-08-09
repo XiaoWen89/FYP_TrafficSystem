@@ -7,6 +7,7 @@ import defaultSettings from '../config/defaultSettings';
 import { currentUser as queryCurrentUser } from './services/ant-design-pro/api_original';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
+const registerPath='/user/registration'
 /** 获取用户信息比较慢的时候会展示一个 loading */
 
 export const initialStateConfig = {
@@ -17,6 +18,7 @@ export const initialStateConfig = {
  * */
 
 export async function getInitialState() {
+  /*
   const fetchUserInfo = async () => {
     try {
       const msg = await queryCurrentUser();
@@ -27,25 +29,42 @@ export async function getInitialState() {
 
     return undefined;
   }; // 如果不是登录页面，执行
+  */
+  const userInfo = () => {
+    const loginString = sessionStorage.getItem('userInfo');
+    if (loginString){
+      return JSON.parse(loginString);
+    }else{
+      if (history.location.pathname === "/user/registration"){
+        history.push(registerPath);
+      }else{
+        history.push(loginPath);
+      }
+    }
+
+    return undefined;
+  }
 
   if (history.location.pathname !== loginPath) {
-    const currentUser = await fetchUserInfo();
+    const currentUser = userInfo();
+
+    //const currentUser = await fetchUserInfo();
     return {
-      fetchUserInfo,
+      userInfo,
       currentUser,
       settings: defaultSettings,
     };
   }
 
   return {
-    fetchUserInfo,
+    userInfo,
     settings: defaultSettings,
   };
 } // ProLayout 支持的api https://procomponents.ant.design/components/layout
 
 export const layout = ({ initialState, setInitialState }) => {
   return {
-    /*rightContentRender: () => <RightContent />,*/
+    rightContentRender: () => <RightContent />,
     disableContentMargin: false,
     /*
     waterMarkProps: {
@@ -56,8 +75,14 @@ export const layout = ({ initialState, setInitialState }) => {
       const { location } = history; // 如果没有登录，重定向到 login
 
       if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(loginPath);
+        console.log(history.location.pathname)
+        if (history.location.pathname==="/user/registration"){
+          history.push(registerPath);
+        }
+        else{
+        history.push(loginPath);}
       }
+      
     },
     /*
     links: isDev

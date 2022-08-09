@@ -1,5 +1,6 @@
 import Footer from '@/components/Footer';
 import { login } from '@/services/ant-design-pro/api_original';
+import { login2 } from '@/services/ant-design-pro/api';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
 import {
   AlipayCircleOutlined,
@@ -17,7 +18,7 @@ import {
 } from '@ant-design/pro-components';
 import { Alert, message, Tabs } from 'antd';
 import React, { useState } from 'react';
-import { FormattedMessage, history, SelectLang, useIntl, useModel } from 'umi';
+import { FormattedMessage, history, SelectLang, useIntl, useModel, Link } from 'umi';
 import styles from './index.less';
 
 const LoginMessage = ({ content }) => (
@@ -35,10 +36,12 @@ const Login = () => {
   const [userLoginState, setUserLoginState] = useState({});
   const [type, setType] = useState('account');
   const { initialState, setInitialState } = useModel('@@initialState');
+  console.log(initialState)
   const intl = useIntl();
 
   const fetchUserInfo = async () => {
     const userInfo = await initialState?.fetchUserInfo?.();
+    console.log(userInfo);
 
     if (userInfo) {
       await setInitialState((s) => ({ ...s, currentUser: userInfo }));
@@ -48,17 +51,41 @@ const Login = () => {
   const handleSubmit = async (values) => {
     try {
       // 登录
-      const msg = await login({ ...values, type });
+      //const msg = await login({ ...values, type });
+      const response = await login2({...values, type });
 
+      console.log(response)
+      /*
       if (msg.status === 'ok') {
         const defaultLoginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
           defaultMessage: '登录成功！',
         });
         message.success(defaultLoginSuccessMessage);
-        await fetchUserInfo();
+        await fetchUserInfo();*/
         /** 此方法会跳转到 redirect 参数所在的位置 */
+        /*
+        if (!history) return;
+        const { query } = history.location;
+        const { redirect } = query;
+        history.push(redirect || '/');
+        return;
+      }*/
 
+      if (response.code === '0') {
+        const defaultLoginSuccessMessage = intl.formatMessage({
+          id: 'pages.login.success',
+          defaultMessage: '登录成功！',
+        });
+        message.success(defaultLoginSuccessMessage);
+        
+        const userInfo = response.data;
+        if (userInfo) {
+          await setInitialState((s) => ({ ...s, currentUser: userInfo }));
+          sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+        }
+        /** 此方法会跳转到 redirect 参数所在的位置 */
+        
         if (!history) return;
         const { query } = history.location;
         const { redirect } = query;
@@ -96,17 +123,10 @@ const Login = () => {
           initialValues={{
             autoLogin: true,
           }}
-          /*
-          actions={[
-            <FormattedMessage
-              key="loginWith"
-              id="pages.login.loginWith"
-              defaultMessage="其他登录方式"
-            />,
-            <AlipayCircleOutlined key="AlipayCircleOutlined" className={styles.icon} />,
-            <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={styles.icon} />,
-            <WeiboCircleOutlined key="WeiboCircleOutlined" className={styles.icon} />,
-          ]}*/
+          
+          actions={
+            <Link to="/user/registration">Registration</Link>
+          }
           onFinish={async (values) => {
             await handleSubmit(values);
           }}
@@ -277,9 +297,9 @@ const Login = () => {
               marginBottom: 24,
             }}
           >
-            <ProFormCheckbox noStyle name="autoLogin">
+            {/*<ProFormCheckbox noStyle name="autoLogin">
               <FormattedMessage id="pages.login.rememberMe" defaultMessage="自动登录" />
-            </ProFormCheckbox>
+          </ProFormCheckbox>*/}
             <a
               style={{
                 float: 'right',

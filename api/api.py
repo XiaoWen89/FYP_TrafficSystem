@@ -1,14 +1,17 @@
+from datetime import datetime
 import time
 import requests
 import os
 import json
 import utils
+import tools
+import mongo as mg
 from math import dist
 from flask import Flask
-from flask import request
+from flask import request, jsonify
 from dotenv import load_dotenv
 from preWeather import getWeatherfromAPI,predictionforAcc,loadModel,timesplit
-from preRealTime import loadModelF, nextXhour, possibility
+from preRealTime import loadModelFAcc,loadModelFHT, nextXhour, possibility,reportAdmin, laccidentData, lheavyTrafficData,readFile,reportSummary,update,lastupdet
 
 
 load_dotenv()
@@ -77,15 +80,18 @@ def roadWorkAdv():
 def prediction():
     accidentlist=incidentShow()["value"]
     resultList=[]
+    dataLength = len(accidentlist)
+    
     if len(accidentlist)==0:
-        resultList=[{"id":None,"accMsg":None,"accInfo":"Currently no Accident, this is test data."}]
+        #resultList=[{"id":None,"accMsg":None,"accInfo":"Currently no Accident, this is test data."}]
+        
         accidentlist=[{
             "Type": "Accident",
             "Latitude": 1.2780135743523675,
             "Longitude": 103.82390919555351,
-            "Message": "(5/7)23:50 Accident on AYE (towards Tuas) at Lower Delta Rd Exit."
+            "Message": "(6/8)12:00 Accident on AYE (towards Tuas) at Lower Delta Rd Exit."
         }]
-        
+      
     count=1
     for accident in accidentlist:
         modelSe, modelDur,modelDis=loadModel()
@@ -96,35 +102,15 @@ def prediction():
         humidity=gethumidity(time,accident)
         weather=getWeatherfromAPI(humidity,temp,weatherCondition,windDirection)
         #print(weather)
-        resultInfor="Prediction-: "+predictionforAcc(modelSe, modelDur,modelDis,weather,accident)
-        accInfo="Accident-: "+ accident["Message"].split(".")[0]
+        resultInfor=predictionforAcc(modelSe, modelDur,modelDis,weather,accident)
+        if (dataLength==0):
+            accInfo="Test Display-: "+ accident["Message"].split(".")[0]
+        else:
+            accInfo="Accident-: "+ accident["Message"].split(".")[0]
         result={"id":count,"accMsg":accInfo,"accInfo":resultInfor}
         resultList.append(result)
-    return {"Result":resultList}
-
-@app.route('/apis/timeCount')
-def timeCountAcc():
-    accidentlist=incidentShow()["value"]
-    accHourDir={"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,
-             "16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
-    for accident in accidentlist:
-        hour=str(timesplit(accident).strftime("%H"))
-        for i in accHourDir.keys():
-            if hour==i:
-                accHourDir[hour]=accHourDir[hour]+1
-    return accHourDir
-          
-@app.route('/apis/timeCount')
-def timeCountinc():
-    iccidentlist=getIncidentData()["value"]   
-    incHourDir={"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,
-             "16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
-    for incident in iccidentlist:
-        hour=str(timesplit(incident).strftime("%H"))
-        for i in incHourDir.keys():
-            if hour==i:
-                incHourDir[hour]=incHourDir[hour]+1
-    return incHourDir
+        count=count+1
+    return {"Result":resultList,"dataLength":dataLength}
 
 @app.route("/apis/get2HourWeatherPred", methods=["GET", "POST"])
 def get2HourWeatherPred():
@@ -175,7 +161,7 @@ def get2HourWeatherCon(request_datetime,accident):
         if smallDis>dis_math:
            smallDis=dis_math
            WeatherConditionS=area["forecast"]   
-    print(WeatherConditionS)
+    #print(WeatherConditionS)
     return WeatherConditionS
 
 @app.route('/apis/getAirTemp', methods=["GET","POST"])
@@ -290,12 +276,128 @@ def getWindSpeed():
 @app.route('/apis/forcasting', methods=["GET","POST"])
 def forcasting():
     hour = int(request.data.decode('UTF-8'))
-    print(hour)
-    modelAcc =loadModelF()
-    forcastingResult=nextXhour(modelAcc,hour)
-    data=possibility(forcastingResult)
-    print(data)
-    return {"data":data}
+    Accidentfile = laccidentData()
+    HeavyTrafficfile= lheavyTrafficData()
+    modelAcc =loadModelFAcc()
+    modelHT =loadModelFHT()
+    forcastingResultAcc=nextXhour(modelAcc,hour,Accidentfile)
+    dataAcc=possibility(forcastingResultAcc)
+    forcastingResultHT=nextXhour(modelHT,hour,HeavyTrafficfile)
+    dataHT=possibility(forcastingResultHT)
+    #print(dataAcc)
+    #print(dataHT)
+    return {"dataAcc":dataAcc, "dataHT":dataHT}
+
+@app.route('/apis/reporting', methods=["GET","POST"])
+def reportingAdmin():
+    #print(request.data)
+    data=json.loads(request.data)
+    startDateCur = data['start_date']
+    endDateCur = data['end_date']
+    file = laccidentData()
+    accData = readFile(file)
+    file = lheavyTrafficData()
+    htData = readFile(file)
+    report1 = reportAdmin(startDateCur,endDateCur,accData)
+    reportSummary1 = reportSummary(report1)
+    report2 = reportAdmin(startDateCur,endDateCur,htData)
+    reportSummary2 = reportSummary(report2)
+    return {"acc":report1, "ht":report2,"accr":reportSummary1,"htr":reportSummary2}
+
+@app.route('/apis/lastUpdate', methods=["GET","POST"])
+def lastUpdate():
+    strDate = lastupdet()
+    print(strDate)
+    return {"update":strDate}
+
+@app.route('/apis/updateData', methods=["GET","POST"])
+def updateData():
+    a=update()
+    return {"update":a}
+
+@app.route('/apis/user/registration', methods=["POST"])
+def userRegistration():
+    data = json.loads(request.data.decode('UTF-8'))
+    response = {}
+    if data is None or data == {}:
+        response['code'] = "-1"
+        response['message'] = "It seem the data is None or empty, please check...."
+
+        return jsonify(response)
+    
+    print("Pass in data is {}".format(str(data)))
+    username = data['username']
+    password = data['password']
+    confirm = data['confirm']
+
+    #check whether account already exists
+    check_result = mg.checkUserExisting(username)
+
+    if check_result == "0":
+        response['code']="-2"
+        response['message']="The account username has been registered, please check ...."
+
+        return jsonify(response)
+    
+    hashed = tools.hash(password)
+
+    user_object = {
+        "username": username,
+        "hashed": hashed,
+        "access": "User"
+    }
+
+    #create user in mongo
+    create_result = mg.createNewUser(user_object)
+
+    if not create_result:
+        response['code'] = "-3"
+        response['message']="The user creation is not successful, please check ...."
+
+        return jsonify(response)
+
+    response['code']="0"
+    response['message']="User registration is successful~"
+    response['data']=create_result
+
+    return jsonify(response)
+
+
+@app.route('/apis/user/login', methods=['POST'])
+def login():
+    data = json.loads(request.data.decode('UTF-8'))
+    response = {}
+    if data is None or data == {}:
+        response['code'] = "-1"
+        response['message'] = "It seem the data is None or empty, please check...."
+
+        return jsonify(response)
+
+    print("Pass in data is {}".format(str(data)))
+    username = data['username']
+    password = data['password']
+
+    hashed = tools.hash(password)
+
+    result = mg.findUser(username, hashed)
+    print(username)
+    print(hashed)
+
+    if result:
+        response['code'] = "0"
+        response['message'] = "Login successful!"
+        response['data'] = {}
+        response['data']['username'] = result['username']
+        response['data']['access'] = result['access']
+
+        return jsonify(response)
+    else:
+        response['code'] = "-1"
+        response['message'] = "Login failed！"
+
+        return jsonify(response)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

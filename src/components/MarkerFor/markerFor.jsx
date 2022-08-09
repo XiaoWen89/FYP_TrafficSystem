@@ -2,9 +2,12 @@ import React from 'react'
 
 const MarkerFor = ({text,textName}) => {
     return(
+        
         <div style={{
+            width: 80, 
+            height: 40,
             color: 'white',
-            background: text === "0.0%" ? "green" : 'red',
+            background: text === "0.0%" ? "blue" : 'red',
             padding: '7px 7px',
             display: 'inline-flex',
             textAlign: 'center',

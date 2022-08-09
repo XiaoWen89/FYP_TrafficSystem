@@ -3,6 +3,7 @@ import { PageHeaderWrapper } from '@ant-design/pro-components';
 import { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
 import { roadWorkAdv } from '../services/ant-design-pro/api';
+import { Card, Row, Col} from 'antd';
 import left from'./image/left.png';
 import right from'./image/right.png';
 import green from'./image/ModerateTraffic.png';
@@ -34,40 +35,22 @@ const roadWork = () => {
   };
 
   return (
-    <PageHeaderWrapper
-    /*
-        content={intl.formatMessage({
-          id: 'pages.admin.subPage.title',
-          defaultMessage: 'This page can only be viewed by admin',
-        })}*/
-    >
-      {/*} <Card>
-          <Alert
-            message={intl.formatMessage({
-              id: 'pages.welcome.alertMessage',
-              defaultMessage: 'Faster and stronger heavy-duty components have been released.',
-            })}
-            type="success"
-            showIcon
-            banner
-            style={{
-              margin: -12,
-              marginBottom: 48,
-            }}
-          />
-          <Typography.Title
-            level={2}
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            <SmileTwoTone /> Ant Design Pro <HeartTwoTone twoToneColor="#eb2f96" /> You
-          </Typography.Title>
-        </Card> */}
-       
+    <PageHeaderWrapper>
+      <Card>
+      <Row>
+      <Col span={14}><MapAdv leftData={avoidLeftLane}rightData={avoidRightLane}/></Col>
+      <Col span={1}></Col>
+      <Col span={9}>
+      <h3>Roadwork - Please avoid left lane. Total: <br/>{avoidLeftLane.length} - in red </h3><br/><br/>
+      <h3>Roadwork - Please avoid Right lane. Total: <br/>{avoidRightLane.length} - in yellow </h3>
+      </Col>
+      </Row>
+      </Card>
+      {/*      
       <p>Roadwork - Please avoid left lane. Total: {avoidLeftLane.length} - in red </p>
       <p>Roadwork - Please avoid Right lane. Total: {avoidRightLane.length} - in yellow </p>
-      <MapAdv leftData={avoidLeftLane}rightData={avoidRightLane}/>
+      <MapAdv leftData={avoidLeftLane}rightData={avoidRightLane}/>*/}
+      {/*
       <br></br>
       <h1 style={{ textAlign: 'center',fontSize: '18px', fontFamily : 'Arial, Helvetica, sans-serif',fontWeight :'bold',right:'50%',left:'50%',marginLeft :'auto',
             marginRight : 'auto'}}>Map Legend</h1>
@@ -105,6 +88,7 @@ const roadWork = () => {
                     <img  src={amber} /><label style={{ textAlign: 'center',fontSize: '14px', fontFamily : 'Arial, Helvetica, sans-serif',fontWeight :'bold'}}>Serve</label> &nbsp; &nbsp;
                 </div>
       </div>
+              */}
     </PageHeaderWrapper>
   );
 };

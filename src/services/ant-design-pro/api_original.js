@@ -30,6 +30,7 @@ export async function login(body, options) {
     ...(options || {}),
   });
 }
+
 /** 此处后端没有提供注释 GET /api/notices */
 
 export async function getNotices(options) {
@@ -65,7 +66,7 @@ export async function addRule(options) {
 }
 /** 删除规则 DELETE /api/rule */
 
-export async function removeRule(options) {
+export async function lastUpdate(options) {
   return request('/api/rule', {
     method: 'DELETE',
     ...(options || {}),

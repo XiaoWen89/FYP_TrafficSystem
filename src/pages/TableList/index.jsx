@@ -11,7 +11,7 @@ import {
 } from '@ant-design/pro-components';
 import { Button, Drawer, Input, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import { FormattedMessage, useIntl } from 'umi';
+import { FormattedMessage, useIntl} from 'umi';
 import UpdateForm from './components/UpdateForm';
 /**
  * @en-US Add node

@@ -9,6 +9,11 @@ export default [
         component: './user/Login',
       },
       {
+        name: 'registration',
+        path: '/user/registration',
+        component: './Registration',
+      },
+      {
         component: './404',
       },
     ],
@@ -48,6 +53,13 @@ export default [
         name: 'forcasting',
         icon: '',
         component: './forcasting',
+      },
+      {
+        path: '/dashboard/reporting',
+        name: 'reporting',
+        icon: '',
+        component: './reporting',
+        access:'canAdmin'
       },
       {
         component: './404',

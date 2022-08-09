@@ -3,13 +3,6 @@ import { PageHeaderWrapper } from '@ant-design/pro-components';
 import { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
 import { forcasting } from '../services/ant-design-pro/api';
-import left from'./image/left.png';
-import right from'./image/right.png';
-import green from'./image/ModerateTraffic.png';
-import orange from'./image/moderateCongest.png';
-import red from'./image/highlyCongest.png';
-import amber from'./image/servalCongest.png';
-
 import { Tabs,Card, Row, Col } from 'antd';
 
 
@@ -20,6 +13,10 @@ const forcastingAcc = () => {
   const [accnextTwoHourForecastData, setaccnextTwoHourForecastData] = useState([[]])
   const [accnextTenHourForecastData, setaccnextTenHourForecastData] = useState([[]])
   const [accnext24HourForecastData, setaccnext24HourForecastData] = useState([[]])
+  const [htnextTwoHourForecastData, sethtnextTwoHourForecastData] = useState([[]])
+  const [htnextTenHourForecastData, sethtnextTenHourForecastData] = useState([[]])
+  const [htnext24HourForecastData, sethtnext24HourForecastData] = useState([[]])
+  const [typeforc, setTypeforc] = useState(['acc','ht']);
   const [type, setType] = useState(['two','ten','24']);
   
   useEffect(async () => {
@@ -27,32 +24,16 @@ const forcastingAcc = () => {
     nextTenHour();
     nextTFHour();
   }, []);
-  /*
-  useEffect(() => {
-    console.log(accidentForecastData)
-    }, [accidentForecastData])
 
-  */
-  useEffect(() => {
-      console.log(accnextTwoHourForecastData)
-      }, [accnextTwoHourForecastData])
   
-  useEffect(() => {
-      console.log(accnextTenHourForecastData)
-      }, [accnextTenHourForecastData])
-
-  useEffect(() => {
-        console.log(accnext24HourForecastData)
-        }, [accnext24HourForecastData])
-
   const nextTwoHour = async () => {
     let hour = 2 //defalt
     let process_data = await forcasting(hour)
          
     console.log(process_data)
     console.log("next Two")
-    setaccnextTwoHourForecastData(process_data.data)
-     
+    setaccnextTwoHourForecastData(process_data.dataAcc)
+    sethtnextTwoHourForecastData(process_data.dataHT)
   };
 
   
@@ -62,52 +43,25 @@ const forcastingAcc = () => {
          
     console.log(process_data)
     console.log("next Ten")
-    setaccnextTenHourForecastData(process_data.data)
+    setaccnextTenHourForecastData(process_data.dataAcc)
+    sethtnextTenHourForecastData(process_data.dataHT)
    
   }
 
   const nextTFHour= async () => {
+    
     let hour = 24
     let process_data = await forcasting(hour)
          
     console.log(process_data)
     console.log("next 24 Hour")
-    setaccnext24HourForecastData(process_data.data)
-   
+    setaccnext24HourForecastData(process_data.dataAcc)
+    sethtnext24HourForecastData(process_data.dataHT)
+    
   }
-
   
   return (
-    <PageHeaderWrapper
-    /*
-        content={intl.formatMessage({
-          id: 'pages.admin.subPage.title',
-          defaultMessage: 'This page can only be viewed by admin',
-        })}*/
-    >
-      {/*} <Card>
-          <Alert
-            message={intl.formatMessage({
-              id: 'pages.welcome.alertMessage',
-              defaultMessage: 'Faster and stronger heavy-duty components have been released.',
-            })}
-            type="success"
-            showIcon
-            banner
-            style={{
-              margin: -12,
-              marginBottom: 48,
-            }}
-          />
-          <Typography.Title
-            level={2}
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            <SmileTwoTone /> Ant Design Pro <HeartTwoTone twoToneColor="#eb2f96" /> You
-          </Typography.Title>
-        </Card> */}
+    <PageHeaderWrapper>
        <p
         style={{
           textAlign: 'center',
@@ -115,17 +69,26 @@ const forcastingAcc = () => {
         }}
       >
       </p>
-      {/*
-       <ul>
-            {accidentForecastData.map((value, index) => (
-                <li key={index}>{value.name}{" "}{value.result}</li>
-            ))}
-        </ul>
-      */}
-      {/*<Button onClick={nextTwoHour}>nextTwoHour</Button>;       
-      <Button onClick={nextTenHour}>nextTenHour</Button>;*/}
-      <Card 
-      title="Forcasting for Accident">
+      <Card>
+      <Tabs activeKey={typeforc} onChange={setTypeforc}>
+            <Tabs.TabPane
+              key="acc"
+              tab={intl.formatMessage({
+                id: 'pages.forcasting.accident.tab',
+                defaultMessage: 'Forcasting for Accident', 
+              })}
+            />
+            {
+            <Tabs.TabPane
+              key="ht"
+              tab={intl.formatMessage({
+                id: 'pages.forcasting.heavytraffic.tab',
+                defaultMessage: 'Forcasting for Heavy Traffic',
+              })}  
+            />
+            }
+      </Tabs>
+
       <Tabs activeKey={type} onChange={setType}>
             <Tabs.TabPane
               key="Two"
@@ -155,70 +118,156 @@ const forcastingAcc = () => {
             }
             
           </Tabs>
-          {type === 'Two' && (
+          {type === 'Two' && typeforc==='acc'&& (
             <>
              <Row>
              <Col span={14}><MapFor forcastingData={accnextTwoHourForecastData}/></Col>
-             <Col span={0.5}></Col>
-            <Col span={10}> 
-            There are some risk to travell to below area for Next 2 Hours:
+             <Col span={1}></Col>
+            <Col span={9}> 
+            <h3>There are some risk to travell to below {accnextTwoHourForecastData.length} area for Next 2 Hours:</h3>
             {accnextTwoHourForecastData.map((value, index) => (
                 <div>
                 {(() => {
 
                   if (value.result !== "0.0%") {
                     return (
-                      <p>{"- "}{value.advice}</p>)}
+                      <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                          <li>{"- Please avoid travell to here: "}</li>
+                          <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)
+                      }
                      })()}
                 </div>
             ))}</Col>
             </Row>
             </>
             )}
-          {type === 'Ten' && (
+          {type === 'Ten' && typeforc==='acc'&& (
             <>
             <Row>
             <Col span={14}><MapFor forcastingData={accnextTenHourForecastData}/></Col>
-            <Col span={0.5}></Col>
-            <Col span={10} > 
-            There are some risk to travell to below area for Next 10 Hours:
+            <Col span={1}></Col>
+            <Col span={9} > 
+            <h3>There are some risk to travell to below {accnextTenHourForecastData.length} area for Next 10 Hours:</h3>
             {accnextTenHourForecastData.map((value, index) => (
                 <div>
                 {(() => {
-
+                  
                   if (value.result !== "0.0%") {
                     return (
-                      <span>{"- "}{value.advice}</span>)}
+                    <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                      <li>{"- Please avoid travell to here: "}</li>
+                      <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)
+                    }
                      })()}
                 </div>
             ))}</Col>
             </Row>
             </>
             )}
-          {type === '24' && (
+          {type === '24' && typeforc==='acc'&& (
             <>
             <Row>
             <Col span={14}><MapFor forcastingData={accnext24HourForecastData}/></Col>
-            <Col span={.5}></Col>
-            <Col span={10} > 
-            There are some risk to travell to below area for Next 24 Hours:
+            <Col span={1}></Col>
+            <Col span={9} > 
+            <h3>There are some risk to travell to below {accnext24HourForecastData.length} area for Next 24 Hours:</h3>
             {accnext24HourForecastData.map((value, index) => (
                 <div>
                 {(() => {
 
                   if (value.result !== "0.0%") {
                     return (
-                      <li>{"- "}{value.advice}</li>)}
+                      <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                      <li>{"-Please avoid travell to here: "}</li>
+                      <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)}
                      })()}
                 </div>
             ))}</Col>
             </Row>
             </>
             )}
-     
+            {type === 'Two' && typeforc==="ht" && (
+            <>
+             <Row>
+             <Col span={14}><MapFor forcastingData={htnextTwoHourForecastData}/></Col>
+             <Col span={1}></Col>
+             <Col span={9}> 
+            <h3>There are some risk to travell to below {htnextTwoHourForecastData.length} area for Next 2 Hours:</h3>
+            {htnextTwoHourForecastData.map((value, index) => (
+                <div>
+                {(() => {
+
+                  if (value.result !== "0.0%") {
+                    return (
+                      <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                          <li>{"- Please avoid travell to here: "}</li>
+                          <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)
+                      }
+                     })()}
+                </div>
+            ))}</Col>
+            </Row>
+            </>
+            )}
+            {type === 'Ten' && typeforc==='ht'&& (
+            <>
+            <Row>
+            <Col span={14}><MapFor forcastingData={htnextTenHourForecastData}/></Col>
+            <Col span={1}></Col>
+            <Col span={9} > 
+            <h3>There are some risk to travell to below {htnextTenHourForecastData.length} area for Next 10 Hours:</h3>
+            {htnextTenHourForecastData.map((value, index) => (
+                <div>
+                {(() => {
+                  
+                  if (value.result !== "0.0%") {
+                    return (
+                    <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                      <li>{"- Please avoid travell to here: "}</li>
+                      <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)
+                    }
+                     })()}
+                </div>
+            ))}</Col>
+            </Row>
+            </>
+            )}
+            {type === '24' && typeforc==='ht'&& (
+            <>
+            <Row>
+            <Col span={14}><MapFor forcastingData={htnext24HourForecastData}/></Col>
+            <Col span={1}></Col>
+            <Col span={9} > 
+            <h3>There are some risk to travell to below {htnext24HourForecastData.length} area for Next 24 Hours:</h3>
+            {htnext24HourForecastData.map((value, index) => (
+                <div>
+                {(() => {
+
+                  if (value.result !== "0.0%") {
+                    return (
+                      <h4>
+                      <li>{index+1}{". "}{value.name}{":"}</li>
+                      <li>{"- Please avoid travell to here: "}</li>
+                      <li>{"-->"}{value.advice}{"later"}</li>
+                    </h4>)}
+                     })()}
+                </div>
+            ))}</Col>
+            </Row>
+            </>
+            )}
 
      </Card>
-      {/*<MapFor forcastingData={accidentForecastData}/>*/}
     </PageHeaderWrapper>
     
 

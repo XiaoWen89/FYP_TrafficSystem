@@ -1,21 +1,20 @@
-import React, { useEffect,useState } from 'react'
-import { HeartTwoTone, SmileTwoTone } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react'
 import { PageHeaderWrapper } from '@ant-design/pro-components';
 import { Alert, Card, Typography, Row, Col } from 'antd';
 import { useIntl } from 'umi';
 import Map from '../components/Map/Map';
 import PieChart from '../components/PieChart/PieChart'
 import BarChart from '../components/BarChart/BarChart'
-import { getAccidentData, get2HourWeatherPred} from '../services/ant-design-pro/api';
-import fair from'./image/fair.png';
-import rain from'./image/raining.png';
-import sunny from'./image/sunny.png';
-import left from'./image/left.png';
-import accidentImage from'./image/accidentLogo.png';
-import green from'./image/ModerateTraffic.png';
-import orange from'./image/moderateCongest.png';
-import red from'./image/highlyCongest.png';
-import amber from'./image/servalCongest.png';
+import { getAccidentData, get2HourWeatherPred } from '../services/ant-design-pro/api';
+import fair from './image/fair.png';
+import rain from './image/raining.png';
+import sunny from './image/sunny.png';
+import left from './image/left.png';
+import accidentImage from './image/accidentLogo.png';
+import green from './image/ModerateTraffic.png';
+import orange from './image/moderateCongest.png';
+import red from './image/highlyCongest.png';
+import amber from './image/servalCongest.png';
 import breakdown from './image/vehicleBreakdown.png';
 import moderateTraffic from './image/ModerateTraffic1.png';
 
@@ -27,7 +26,9 @@ const Admin = () => {
   const [weatherForecastData, setWeatherForecastData] = useState([])
 
   useEffect(async () => {
-    fetchAccidentData();
+    let isMounted = true;
+    fetchAccidentData(isMounted);
+    return () => { isMounted = false };
   }, [])
   /*
   useEffect(() => {
@@ -37,76 +38,82 @@ const Admin = () => {
   useEffect(() => {
       console.log(accidentCountData)
   }, [accidentCountData])
-  */
+  
   useEffect(() => {
       console.log(weatherForecastData)
-  }, [weatherForecastData])
-  
+  }, [weatherForecastData])*/
+
   useEffect(async () => {
-    get2HourWeatherPredData()
+    let isMounted = true;
+    get2HourWeatherPredData(isMounted)
+    return () => { isMounted = false };
   }, [])
 
-  const fetchAccidentData = async()=>{
+  const fetchAccidentData = async (isMounted) => {
     let raw_data = await getAccidentData();
 
     let accident_data = raw_data.value;
-    setAccidentData(accident_data)
+    if (isMounted) setAccidentData(accident_data)
 
     let processed_data = processAccidentData(accident_data)
-    setAccidentCountData(processed_data)
+    if (isMounted) setAccidentCountData(processed_data)
   }
 
-  const get2HourWeatherPredData = async()=>{
+  const get2HourWeatherPredData = async (isMounted) => {
     let current_datetime = prepareDatetime()
-
+    console.log(current_datetime)
     let response = await get2HourWeatherPred(current_datetime);
     console.log(response)
     let twoHourWeatherData;
-    if (response.data){
+    if (response.data) {
       twoHourWeatherData = response.data
-      setWeatherForecastData(twoHourWeatherData)
+      if (isMounted) setWeatherForecastData(twoHourWeatherData)
     }
   }
 
-  function processAccidentData(accident_data){
+  function processAccidentData(accident_data) {
     let processed_data = {}
     for (const index in accident_data) {
       let type = accident_data[index].Type
-      if (!(type in processed_data)){
+      if (!(type in processed_data)) {
         processed_data[type] = 1
-      }else{
-        processed_data[type] = processed_data[type]  + 1
+      } else {
+        processed_data[type] = processed_data[type] + 1
       }
     }
 
     let processed_data_ = []
-    for (const type in processed_data){
+    for (const type in processed_data) {
       let element = {};
       element["type"] = type;
-      element["value"]= processed_data[type];
+      element["value"] = processed_data[type];
       processed_data_.push(element);
     }
 
     return processed_data_
   }
 
-  function prepareDatetime(){
-    let current_datetime = new Date().toISOString();
+  function prepareDatetime() {
+    let tzoffset = (new Date()).getTimezoneOffset() * 60000;
+    let current_datetime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
+    //let current_datetime = new Date().toISOString();
     let dot_loc = current_datetime.indexOf('.');
-    let final_datetime = current_datetime.substring(0,dot_loc)
+    console.log(dot_loc)
+    let final_datetime = current_datetime.substring(0, dot_loc)
+    console.log(final_datetime)
 
     return final_datetime
   }
 
   return (
     <PageHeaderWrapper
-      /*
-      content={intl.formatMessage({
-        id: 'pages.admin.subPage.title',
-        defaultMessage: 'This page can only be viewed by admin',
-      })}*/
+    /*
+    content={intl.formatMessage({
+      id: 'pages.admin.subPage.title',
+      defaultMessage: 'This page can only be viewed by admin',
+    })}*/
     >
-     {/*} <Card>
+      {/*} <Card>
         <Alert
           message={intl.formatMessage({
             id: 'pages.welcome.alertMessage',
@@ -142,16 +149,16 @@ const Admin = () => {
         。
       </p>
       */}
-      <Card 
-      title="Real Time Traffic Accident Monitoring"
+      <Card
+        title="Real Time Traffic Accident Monitoring"
       >
         <Row>
-          <Col span={12}><PieChart accidentCountData = {accidentCountData}/></Col>
-          <Col span={12}><BarChart accidentCountData = {accidentCountData}/></Col>
+          <Col span={12}><PieChart accidentCountData={accidentCountData} /></Col>
+          <Col span={12}><BarChart accidentCountData={accidentCountData} /></Col>
         </Row>
       </Card>
-      <Map accidentData={accidentData} weatherForecastData={weatherForecastData}/>
-      <br></br>
+      <Map accidentData={accidentData} weatherForecastData={weatherForecastData} type={"monitoring"}/>
+      {/*
       <h1 style={{ textAlign: 'center',fontSize: '18px', fontFamily : 'Arial, Helvetica, sans-serif',fontWeight :'bold',right:'50%',left:'50%',marginLeft :'auto',
             marginRight : 'auto'}}>Map Legend</h1>
       <div
@@ -212,6 +219,7 @@ const Admin = () => {
                   </div> 
           </div>
       </div>
+                  */}
     </PageHeaderWrapper>
   );
 };

@@ -19,7 +19,7 @@ const loginOut = async () => {
     history.replace({
       pathname: '/user/login',
       search: stringify({
-        redirect: pathname + search,
+        redirect: '/',
       }),
     });
   }
@@ -59,7 +59,7 @@ const AvatarDropdown = ({ menu }) => {
 
   const { currentUser } = initialState;
 
-  if (!currentUser || !currentUser.name) {
+  if (!currentUser || !currentUser.username) {
     return loading;
   }
 
@@ -84,20 +84,24 @@ const AvatarDropdown = ({ menu }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: 'Logout',
     },
   ];
+
   const menuHeaderDropdown = (
     <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick} items={menuItems} />
   );
+  
   return (
     <HeaderDropdown overlay={menuHeaderDropdown}>
       <span className={`${styles.action} ${styles.account}`}>
-        <Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />
-        <span className={`${styles.name} anticon`}>{currentUser.name}</span>
+      <Avatar size="small" className={styles.avatar} alt="avatar" />
+        {/*<Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />*/}
+        <span className={`${styles.name} anticon`}>{currentUser.username}</span>
       </span>
     </HeaderDropdown>
   );
+  
 };
 
 export default AvatarDropdown;

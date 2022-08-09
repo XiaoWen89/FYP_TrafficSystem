@@ -31,6 +31,28 @@ export async function login(body, options) {
   });
 }
 
+export async function login2(body, options) {
+  return request('/apis/user/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function register(body, options) {
+  return request('/apis/user/registration', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** POST  /api_/getIncidentData **/
 
 export async function getAccidentData(body, options) {
@@ -106,6 +128,38 @@ export async function getWindSpeed(body, options) {
 
 export async function forcasting(body, options) {
   return request('/apis/forcasting', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
+
+/** POST /apis/reporting */
+
+export async function reportingAdmin(body, options) {
+  console.log(body)
+  return request('/apis/reporting', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
+
+/** POST /apis/reporting */
+
+export async function lastUpdate(body, options) {
+  console.log(body)
+  return request('/apis/lastUpdate', {
+    method: 'POST',
+    data: body,
+    ...(options || {})
+  })
+}
+
+/** POST /apis/reporting */
+
+export async function updateData(body, options) {
+  return request('/apis/updateData', {
     method: 'POST',
     data: body,
     ...(options || {})

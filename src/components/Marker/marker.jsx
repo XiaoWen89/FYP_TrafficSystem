@@ -4,8 +4,8 @@ const Marker = ({text}) => {
     return(
         <div style={{
             color: 'white',
-            background: text === "Accident" ? "red" : (text === "Diversion" ? "orange" : (text === "Roadwork" ? "yellow" :(text === "Vehicle breakdown" ? "blue" : (text === "Heavy traffic" ? "green" : "'grey'")))),
-            padding: '5px 5px',
+            background: text === "Accident" ? "red" : (text === "Diversion" ? "purple" : (text === "Roadwork" ? "yellow" :(text === "Vehicle breakdown" ? "blue" : (text === "Heavy Traffic" ? "orange" : "grey")))),
+            padding: '10px 10px',
             display: 'inline-flex',
             textAlign: 'center',
             alignItems: 'center',
@@ -15,7 +15,7 @@ const Marker = ({text}) => {
             opacity: 0.7,
             fontSize: '10px',
         }}>
-            {text === "Accident" ? "!" : (text === "Diversion" ? "X" : (text === "Roadwork" ? "W" : (text === "Vehicle breakdown" ? "V" : (text === "Heavy traffic" ? "H" : "?"))))}
+            {/*{text === "Accident" ? "!" : (text === "Diversion" ? "X" : (text === "Roadwork" ? "W" : (text === "Vehicle breakdown" ? "V" : (text === "Heavy traffic" ? "H" : "?"))))}*/}
         </div>
     )
 }
