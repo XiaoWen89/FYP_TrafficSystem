@@ -14,7 +14,7 @@ Frontend -> React (UI credit to Ant Design Pro, can refer its [Github](https://g
 
 Backend -> Flask (python)
 
-Database -> Mongo / MySQL (Need to decide)
+Database -> Mongo
 
 # Environment Prepare
 
@@ -79,6 +79,14 @@ cd pip install -r requirements.txt
 ```bash
 flask run
 ```
+
+## Database Part
+
+### Install Mongdb and Mongdb compass 
+
+Please refer to the [here](https://www.mongodb.com/try/download/community)
+
+upload user file and incident data
 
 ## More
 
